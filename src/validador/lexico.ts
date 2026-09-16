@@ -100,8 +100,8 @@ export function lexear(texto: string): { tokens: Token[]; errores: Diagnostico[]
          columna++
        }
        if (sinCierre) {
-         errores.push(mk('L-003', `Literal de caracter sin cerrar`, linea, col))
-       } else if (contenido.length !== 1) {
+         errores.push(mk('L-002', `Literal de caracter sin cerrar`, linea, col))
+        } else if (contenido.length !== 1) {
          errores.push(mk('L-004', `Literal de caracter debe tener 1 carácter`, linea, col))
        }
        tokens.push({ tipo: 'CARACTER', texto: contenido, line: linea, column: col })

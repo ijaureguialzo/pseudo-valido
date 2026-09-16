@@ -2,14 +2,15 @@
 export type Severidad = 'error' | 'warning'
 
 export interface ErrorDef {
-   descripcion: string  
+   descripcion: string   
    severity: Severidad 
 }
 
-export const ERRS: Record<string, ErrorDef> = {
+export const ERRORS: Record<string, ErrorDef> = {
     // === LÉXICO (6 errores) ===
     'L-001': { descripcion: 'Token no reconocido', severity: 'error' },
-    'L-003': { descripcion: 'Literal de cadena sin cerrar', severity: 'error' },  
+    'L-002': { descripcion: 'Literal de carácter sin cerrar', severity: 'error' },
+    'L-003': { descripcion: 'Literal de cadena sin cerrar', severity: 'error' },   
     'L-004': { descripcion: 'Literal de carácter con longitud ≠ 1', severity: 'error' },
     'L-005': { descripcion: 'Identificador que empieza por dígito', severity: 'error' },
     'L-006': { descripcion: 'Espacio en el interior de un número decimal', severity: 'error' },
@@ -65,5 +66,5 @@ export const ERRS: Record<string, ErrorDef> = {
 }
 
 export function getErrorDef(code: string): ErrorDef | null {
-    return ERRS[code] ?? null
+    return ERRORS[code] ?? null
 }

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest'
 import { parsear } from '../../src/validador/sintactico'
 import { readFileSync, readdirSync } from 'node:fs'
