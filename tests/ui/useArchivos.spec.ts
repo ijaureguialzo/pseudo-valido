@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { useArchivos, type StorageLike } from '../../src/ui/composables/useArchivos'
+import { useArchivos, CLAVE_NO_STORAGE, type StorageLike } from '../../src/ui/composables/useArchivos'
 
 function mkStorage(prefill?: Record<string, string>): StorageLike {
   const m = new Map<string, string>(Object.entries(prefill ?? {}))
@@ -46,7 +46,9 @@ describe('useArchivos', () => {
 
    it('sin localStorage -> modo memoria y aviso', () => {
      let aviso = ''
-     const a = useArchivos({ storage: undefined as any, aviso: (m: string) => (aviso = m) })
+     // CLAVE_NO_STORAGE fuerza el modo memoria sin recurrir al global de
+     // happy-dom, que sí existe; así podemos comprobar el aviso.
+     const a = useArchivos({ storage: CLAVE_NO_STORAGE, aviso: (m: string) => (aviso = m) })
      a.nuevo('mem')
      expect(a.lista.value.map((f) => f.nombre)).toContain('mem')
      expect(aviso.length).toBeGreaterThan(0)

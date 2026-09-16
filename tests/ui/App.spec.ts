@@ -10,8 +10,10 @@ import BarraEstado from '../../src/ui/componentes/BarraEstado.vue'
 describe('App.vue', () => {
   it('monta y muestra el título', () => {
    const c = mount(App)
-   expect(c.text()).toContain('pseudo-valido')
-   })
+   // El H1 del cabecera expone el nombre público de la app. Desde el commit
+   // "Textos revisados" (eb7ce17) es "PseudoVálido"; el test se actualizó aquí.
+   expect(c.text()).toContain('PseudoVálido')
+    })
 
    it('ensambla el panel izquierdo (lista de archivos)', () => {
      const c = mount(App)

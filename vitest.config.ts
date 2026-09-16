@@ -1,3 +1,12 @@
+// Los tests de @vue/test-utils (wrapper.emitted()) dependen de que Vue corra en
+// modo desarrollo; el hook de captura de emits solo existe en el runtime de
+// dev. Vitest carga la config en el hilo principal y los workers heredan el
+// entorno: fijar NODE_ENV=test aquí (antes que cualquier import de Vue) fuerza
+// ese modo de forma determinista. Una alternativa incorrecta sería usar
+// `define: {'process.env.NODE_ENV': ...}` porque esa sustitución solo alcanza
+// al código transformado por Vite, no al runtime de Vue ya pre-compilado.
+process.env.NODE_ENV = 'test'
+
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
