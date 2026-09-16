@@ -85,6 +85,7 @@ function alRenombrar(nombre: string): void {
 }
 
 .cabecera {
+  padding-left: 0.3rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -110,7 +111,7 @@ function alRenombrar(nombre: string): void {
 .lista {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding-left: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
