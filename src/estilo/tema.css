@@ -1,0 +1,63 @@
+/**
+ * Capa de temas de pseudo-valido.
+ *
+ * Pico (CSS framework de base) ya conmuta el modo claro/oscuro entre
+ * `:root:not([data-theme=dark])` / `[data-theme=dark]` y `prefers-color-scheme`,
+ * y expone tokens temáticos reales (p. ej. --pico-background-color, --pico-color,
+ * --pico-muted-color, --pico-muted-border-color, --pico-primary,
+ * --pico-code-background-color). El tema base de Pico NO incluye colores
+ * semánticos de estado (éxito / error / aviso), así que los definimos aquí como
+ * `--pv-*`, temáticos, para que las UI de diagnósticos respondan al modo.
+ *
+ * Los selectores por atributo/mediadeparten la especificidad de Pico
+ * (0,0,1 / 0,1,2) para ser compatibles sin sobrescribir nada que Pico no defina.
+ */
+
+/* Claro (predeterminado y por preferencia del sistema si el sistema pide claro). */
+:root,
+:root:not([data-theme="dark"]) {
+   --pv-surface: var(--pico-background-color, #ffffff);
+   --pv-surface-secondary: var(--pico-card-sectioning-background-color, #f9f9fc);
+   --pv-surface-code: var(--pico-code-background-color, rgb(243, 244, 246));
+   --pv-border: var(--pico-muted-border-color, #e7eefa);
+   --pv-text: var(--pico-color, #373c44);
+   --pv-text-muted: var(--pico-muted-color, #646b79);
+   --pv-primary: var(--pico-primary, #0172ad);
+   --pv-on-primary: var(--pico-primary-inverse, #ffffff);
+   /* Colores semánticos de estado (definidos por la app). */
+   --pv-success: #22874d;
+   --pv-danger: #b42931;
+   --pv-warning: #b57d15;
+   color-scheme: light;
+   --pv-surface-code: var(--pico-code-background-color, rgb(243, 244, 246));
+}
+
+/* Oscuro. */
+[data-theme="dark"] {
+   --pv-surface: var(--pico-background-color, #13161e);
+   --pv-surface-secondary: var(--pico-card-sectioning-background-color, #1a1e28);
+   --pv-surface-code: var(--pico-code-background-color, #1a1e28);
+   --pv-border: var(--pico-muted-border-color, #202632);
+   --pv-text: var(--pico-color, #c2c7d0);
+   --pv-text-muted: var(--pico-muted-color, #7b8495);
+   --pv-primary: var(--pico-primary, #01aaff);
+   --pv-on-primary: #00151f;
+   --pv-success: #4ec27b;
+   --pv-danger: #e5636b;
+   --pv-warning: #e0a33a;
+   color-scheme: dark;
+}
+
+/* La app de dos paneles ocupa toda la ventana. */
+html,
+body {
+   margin: 0;
+   height: 100%;
+   background: var(--pv-surface, var(--pico-background-color, #ffffff));
+   color: var(--pv-text, var(--pico-color, #373c44));
+   font-family: var(--pico-font-family-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif);
+}
+
+#app {
+   height: 100%;
+}

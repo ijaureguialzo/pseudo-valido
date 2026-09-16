@@ -6,6 +6,7 @@ import PanelDiagnosticos from './ui/componentes/PanelDiagnosticos.vue'
 import BarraEstado from './ui/componentes/BarraEstado.vue'
 import { useArchivos, type Archivo } from './ui/composables/useArchivos'
 import { useValidacion } from './ui/composables/useValidacion'
+import { useTema } from './ui/composables/useTema'
 import { validar } from './validador'
 
 const archivos = useArchivos()
@@ -27,9 +28,15 @@ const { diagnosticos } = useValidacion({
   auto: true,
 })
 
+// Control de tema (auto / claro / oscuro).
+const tema = useTema()
+function onCambioTema(evt: Event): void {
+  const value = (evt.target as HTMLSelectElement).value as 'auto' | 'claro' | 'oscuro'
+  tema.elegir(value)
+}
+
 // Manejadores para listar/renombrar/borrar
 function onNuevo(): void {
-  // El nombre lo gestiona el componente padre; aquí generamos uno único.
   archivos.nuevo(undefined, '')
 }
 
@@ -40,86 +47,155 @@ function onSeleccionar(nombre: string): void {
 function onRenombrar(nombre: string, nuevo: string): void {
   try {
     archivos.renombrar(nombre, nuevo)
-  } catch (e) {
+    } catch (e) {
     window.alert((e as Error).message)
-  }
+    }
 }
 
 function onBorrar(nombre: string): void {
   try {
     archivos.borrar(nombre)
-  } catch (e) {
+    } catch (e) {
     window.alert((e as Error).message)
-  }
+    }
 }
 
 function onEditarContenido(nuevo: string): void {
   archivos.actualizarContenido(nuevo)
 }
-
 </script>
 
 <template>
-<div class="app-grilla">
-  <aside class="panel-izq">
-    <div class="cabecera-app">
-      <h1 class="titulo-app">pseudo-valido</h1>
-    </div>
-    <ListaArchivos
-      :archivos="archivos.lista.value as Archivo[]"
-      :activo="archivos.activo.value?.nombre ?? null"
-      @nuevo="onNuevo"
-      @seleccionar="onSeleccionar"
-      @renombrar="onRenombrar"
-      @borrar="onBorrar"
-    />
-  </aside>
-  <section class="panel-der">
-    <BarraEstado
-      :diagnosticos="diagnosticos"
-      :nombre-activo="archivos.activo.value?.nombre ?? null"
-    />
-    <EditorCodesmio
-      v-if="archivos.activo.value"
-      :valor="archivos.activo.value.contenido"
-      @actualizar="onEditarContenido"
-    />
-    <PanelDiagnosticos
-      :diagnosticos="diagnosticos"
-    />
-  </section>
-</div>
+  <div class="app-grilla">
+    <aside class="panel-izq">
+      <header class="cabecera-app">
+        <h1 class="titulo-app">
+          pseudo-valido
+        </h1>
+        <label class="control-tema">
+          <span>Temático</span>
+          <select
+            class="selector-tema"
+            data-testid="selector-tema"
+            :value="tema.modo.value"
+            @change="onCambioTema"
+          >
+            <option value="auto">Auto</option>
+            <option value="claro">Claro</option>
+            <option value="oscuro">Oscuro</option>
+          </select>
+        </label>
+      </header>
+      <ListaArchivos
+        class="lista"
+        :archivos="archivos.lista.value as Archivo[]"
+        :activo="archivos.activo.value?.nombre ?? null"
+        @nuevo="onNuevo"
+        @seleccionar="onSeleccionar"
+        @renombrar="onRenombrar"
+        @borrar="onBorrar"
+      />
+    </aside>
+    <section class="panel-der">
+      <BarraEstado
+        class="barra-estado"
+        :diagnosticos="diagnosticos"
+        :nombre-activo="archivos.activo.value?.nombre ?? null"
+      />
+      <EditorCodesmio
+        v-if="archivos.activo.value"
+        class="editor"
+        :valor="archivos.activo.value.contenido"
+        @actualizar="onEditarContenido"
+      />
+      <PanelDiagnosticos
+        class="panel-diagnosticos"
+        :diagnosticos="diagnosticos"
+      />
+    </section>
+  </div>
 </template>
 
 <style scoped>
+/* El framework Pico define la base (tipografía, tokens y modo claro/oscuro).
+   La capa de tokens de la app (--pv-*, en src/estilo/tema.css) hace de puente
+   entre Pico y la presentación, de modo que el modo claro/oscuro es uniforme. */
 .app-grilla {
   display: grid;
   grid-template-columns: 280px 1fr;
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
+
 .panel-izq {
-  border-right: 1px solid #444;
-  background: #1e1e2e;
-  color: #ccc;
   display: flex;
   flex-direction: column;
+  background: var(--pv-surface-secondary);
+  border-right: 1px solid var(--pv-border);
 }
+
 .panel-der {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #111;
-  color: #eee;
+  background: var(--pv-surface);
 }
+
 .cabecera-app {
-  padding: 8px 12px;
-  border-bottom: 1px solid #333;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--pv-border);
 }
+
 .titulo-app {
   margin: 0;
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 600;
-  opacity: 0.8;
+  font-family: var(--pico-font-family);
+  color: var(--pv-text);
 }
+
+.control-tema {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-family: var(--pico-font-family);
+  color: var(--pv-text-muted);
+}
+
+.selector-tema {
+  display: inline-block;
+  width: auto;
+  min-height: 0;
+  height: 1.9rem;
+  padding: 0 0.4rem;
+  margin: 0;
+  font-family: var(--pico-font-family);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--pv-text);
+  background: var(--pv-surface);
+  border: 1px solid var(--pv-border);
+  border-radius: 0.25rem;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (max-width: 768px) {
+   .app-grilla {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+   }
+   .panel-izq {
+    border-right: none;
+    border-bottom: 1px solid var(--pv-border);
+   }
+}
+
 </style>
