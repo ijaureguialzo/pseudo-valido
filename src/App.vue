@@ -70,10 +70,10 @@ function onEditarContenido(nuevo: string): void {
     <aside class="panel-izq">
       <header class="cabecera-app">
         <h1 class="titulo-app">
-          pseudo-valido
+          PseudoVálido
         </h1>
         <label class="control-tema">
-          <span>Temático</span>
+          <span>Tema</span>
           <select
             class="selector-tema"
             data-testid="selector-tema"
