@@ -1,0 +1,8 @@
+Algoritmo Positivo
+  Declarar num Como Entero
+  num = 0
+  Repetir
+    Escribir "Escribe un número positivo"
+    Leer num
+  Mientras num <= 0
+FinAlgoritmo

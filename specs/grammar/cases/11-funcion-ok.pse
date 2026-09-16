@@ -1,0 +1,8 @@
+Funcion esMayorDeEdad(Definir e Como Entero) -> Logico
+  resultado = e >= 18
+FinFuncion
+Algoritmo Llamar
+  Declarar x Como Entero
+  x = 20
+  Escribir esMayorDeEdad(x)
+FinAlgoritmo

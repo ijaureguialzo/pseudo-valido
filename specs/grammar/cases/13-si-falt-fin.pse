@@ -1,0 +1,4 @@
+Algoritmo MalSi
+  Si x > 0 Entonces
+    Escribir "x"
+FinAlgoritmo

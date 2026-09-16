@@ -1,0 +1,7 @@
+Algoritmo Contar
+  Declarar contador Como Entero
+  contador = 0
+  Mientras contador < 10 Hacer
+    contador = contador + 1
+  FinMientras
+FinAlgoritmo

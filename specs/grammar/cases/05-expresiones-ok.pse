@@ -1,0 +1,7 @@
+Algoritmo ExpresionesSimples
+  Declarar edad Como Entero
+  Declarar esMenor Como Logico
+  edad = 25
+  esMenor = edad < 18
+  Escribir esMenor
+FinAlgoritmo

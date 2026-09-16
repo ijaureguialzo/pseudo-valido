@@ -1,0 +1,4 @@
+Algoritmo NoIni
+  Declarar x Como Entero
+  Escribir x
+FinAlgoritmo

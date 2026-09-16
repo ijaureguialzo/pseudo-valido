@@ -1,0 +1,6 @@
+Funcion factorial(Definir n Como Entero) -> Entero
+  resultado = n * factorial(n - 1)
+FinFuncion
+Algoritmo F
+  Escribir factorial(5)
+FinAlgoritmo

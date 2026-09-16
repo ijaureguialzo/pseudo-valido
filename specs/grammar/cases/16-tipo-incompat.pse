@@ -1,0 +1,7 @@
+Algoritmo MalType
+   Declarar a Como Entero
+   Declarar b Como Entero
+   a = 5
+   b = 10
+   Escribir a && b
+FinAlgoritmo

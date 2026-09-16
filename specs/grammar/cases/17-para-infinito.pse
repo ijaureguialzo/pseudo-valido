@@ -1,0 +1,5 @@
+Algoritmo ParaInf
+  Para i = 1 Mientras i < 10 Hacer
+    Escribir i
+  FinPara
+FinAlgoritmo

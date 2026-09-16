@@ -1,0 +1,12 @@
+Algoritmo Tipos
+  Declarar e Como Entero
+  Declarar r Como Real
+  Declarar l Como Logico
+  Declarar c Como Caracter
+  Declarar s Como Cadena
+  e = 123
+  r = 14.95
+  l = verdadero
+  c = 'x'
+  s = "Hola, ¿qué tal?"
+FinAlgoritmo

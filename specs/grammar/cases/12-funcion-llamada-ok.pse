@@ -1,0 +1,6 @@
+Funcion suma2(Definir a Como Entero, Definir b Como Entero) -> Entero
+  resultado = a + b
+FinFuncion
+Algoritmo Prueba
+  Escribir suma2(3, 4)
+FinAlgoritmo

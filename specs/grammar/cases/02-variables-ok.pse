@@ -1,0 +1,10 @@
+Algoritmo CreandoVariables
+  Declarar edad Como Entero
+  Declarar precio Como Real
+  Declarar esValido Como Logico
+  Declarar nombre Como Cadena
+  edad = 25
+  precio = 0.99
+  esValido = falso
+  nombre = "Ion"
+FinAlgoritmo
