@@ -10,11 +10,35 @@ function codigos(src: string): string[] {
 
 describe('checker semántico', () => {
   it('M-001 variable no declarada', () => {
-    expect(codigos('Algoritmo A\nEscribir x\nFinAlgoritmo'))
+   expect(codigos('Algoritmo A\nEscribir x\nFinAlgoritmo'))
       .toContain('M-001')
    })
 
-   it('M-002 declaración duplicada', () => {
+  it('M-001 asignación a variable no declarada', () => {
+   // El LHS de = no está declarado: `a = 7`.
+   const r = validar('Algoritmo Prueba\na = 7\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-001'])
+   expect(r.correcto).toBe(false)
+   })
+
+  it('M-001 no se dispara al asignar variable declarada', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar a Como Entero\na = 7\nFinAlgoritmo')
+   expect(r.diagnosticos.filter((d) => d.code === 'M-001').length).toBe(0)
+   expect(r.correcto).toBe(true)
+   })
+
+  it('M-004 Leer sobre variable no declarada', () => {
+   const r = validar('Algoritmo Prueba\nLeer a\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-004'])
+   expect(r.correcto).toBe(false)
+   })
+
+  it('M-004 no se dispara al leer variable declarada', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar a Como Entero\nLeer a\nFinAlgoritmo')
+   expect(r.diagnosticos.filter((d) => d.code === 'M-004').length).toBe(0)
+   })
+
+  it('M-002 declaración duplicada', () => {
     expect(codigos('Algoritmo A\nDeclarar x Como Entero\nDeclarar x Como Entero\nFinAlgoritmo'))
       .toContain('M-002')
    })

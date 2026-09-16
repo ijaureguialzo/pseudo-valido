@@ -92,14 +92,24 @@ function analizarSentencia(
        break
         }
     case 'asignacion': {
-      fAlc.inicializadas.add(s.nombre)
+      if (!estaDeclarada(alc, fAlc, s.nombre)) {
+         marcar(errores, ya, 'M-001', 'M-001:' + s.nombre,
+                s.tok.line, s.tok.column, `Variable '${s.nombre}' no declarada`)
+       } else {
+         fAlc.inicializadas.add(s.nombre)
+        }
       revisarExpr(s.valor, fAlc, alc, errores, ya, funcionActual)
       break
-        }
+         }
     case 'leer': {
-      fAlc.inicializadas.add(s.nombre)
-      break
+      if (!estaDeclarada(alc, fAlc, s.nombre)) {
+         marcar(errores, ya, 'M-004', 'M-004:' + s.nombre,
+                s.tok.line, s.tok.column, `Variable '${s.nombre}' no declarada`)
+       } else {
+         fAlc.inicializadas.add(s.nombre)
         }
+      break
+         }
     case 'escribir': {
       for (const e of s.args) revisarExpr(e, fAlc, alc, errores, ya, funcionActual)
       break
