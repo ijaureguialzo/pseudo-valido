@@ -376,6 +376,40 @@ cumplimiento global de `G-01` y `F-01`.
 verde, (4) `npm run build` verde. Solo con los 4 en verde se da por cerrado.
 **Commit:** `git commit -m "chore: revisión final y cierre (T-32)"`
 
+## Fase 4 · Presentación y modo oscuro (R-12 / R-13 / R-14)
+
+Objetivo: adoptar un framework CSS moderno, soportar el modo oscuro y mejorar
+la tipografía y el editor (la app quedaba con colores hardcodeados, sin
+modo oscuro y con un `<textarea>` sin números de línea).
+
+### T-40 · Framework CSS: Pico v2 (R-12)
+**Files:** `index.html`, `src/main.ts`, `package.json`
+- `pnpm add @picocss/pico` (v2, con `--config.production=false` para no saltarse devDeps con pnpm).
+- Se importa `@picocss/pico/css/pico.min.css` en `main.ts` (empaqueta el
+  bundler; sin CDN en producción).
+**Verificación:** `npm run build` genera `dist/` con el CSS de Pico integrado.
+**Commit:** `chore: Pico CSS como framework de base (T-40)`
+
+### T-41 · Modo oscuro con `useTema` (R-13) — TDD
+**Files:** `src/ui/composables/useTema.ts`, `tests/ui/useTema.spec.ts`
+- `useTema()`: modo `auto|claro|oscuro`, escribe/elimina `data-theme` en el
+  `<html>`, `auto` sigue `prefers-color-scheme`, persiste en
+  `localStorage['pseudo-valido/theme']`, y expone `alternar()`.
+- `src/estilo/tema.css`: capa de tokens `--pv-*` que deriva de los tokens de
+  Pico (`--pico-background-color`, `--pico-color`, …) para superficies
+  clara/oscura coherentes.
+**Verificación:** `npx vitest run tests/ui/useTema.spec.ts` → PASS.
+**Commit:** `feat(ui): tema auto/claro/oscuro con useTema (T-41)`
+
+### T-42 · Editor con gutter + tipografía Pico (R-14)
+**Files:** `src/ui/componentes/EditorCodesmio.vue`, los demás componentes
+- El editor gana un **gutter de números de línea** (sincronizado con el
+  scroll), tipografía monoespaciada de Pico y foco visible; conserva el
+  contrato `<textarea>` + `.editor-codigo` + emit `actualizar`.
+- Todos los componentes usan `var(--pv-*)` en vez de colores hardcodeados.
+**Verificación:** `npm run test` verde y `npm run build` verde.
+**Commit:** `feat(ui): editor con gutter y tipografía Pico (T-42)`
+
 ## Resumen de flujo TDD
 `rojo -> verde -> refactor`, una tarea a la vez, revision en dos fases entre
 tareas, commit tras cada tarea y suite completa verde antes de avanzar.

@@ -75,11 +75,33 @@ pseudocódigo, solo lo **valida** (léxico, sintáctico y semántico estricto).
 - No hay multiusuario/colaboración.
 - No hay import/export a disco (solo `localStorage`).
 - No hay i18n (texto en español).
-- No hay dark mode (opcional V1).
+
+## 5.1 Requisitos de presentación (modo claro/oscuro y tipografía)
+
+- **R-12** — La UI se construye sobre un **framework CSS moderno** (Pico CSS v2,
+  importado y empaquetado localmente con Vite; sin CDN en producción).
+- **R-13** — **Modo oscuro** soportado: un `useTema` conmutable entre `auto` /
+  `claro` / `oscuro`, que escribe/elimina `data-theme` en el `<html>`. En
+  `auto` sigue `prefers-color-scheme` del sistema; la elección se persiste en
+  `localStorage` (`pseudo-valido/theme`). Los tokens de superficie/estado
+  (`--pv-*`, definidos en `src/estilo/tema.css`) derivan de los tokens
+  temáticos de Pico para que ambos modos sean coherentes.
+- **R-14** — **Tipografía** consistente: interfaz con la family sans de Pico
+  (`--pico-font-family`) y editor con la monoespaciada de Pico
+  (`--pico-font-family-monospace`). El editor muestra **números de línea**
+  (gutter) con desplazamiento sincronizado.
+
 
 ## 6. Criterio de aceptación (resumen)
 
 1. `npm run test` en verde (≥ 19 casos golden de `G-01` §6 + tests de UI).
 2. `npm run build` genera `dist/` sin errores.
 3. Al recargar, la lista y el archivo activo se restauran desde `localStorage`.
-4. Escribir sintaxis errónea muestra el diagnóstico con línea/columna en el gutter y en el panel.
+4. Escribir sintaxis errónea muestra el diagnóstico con línea/columna en el
+gutter y en el panel.
+5. El conmutador de tema auto/claro/oscuro cambia el aspecto y el atributo
+data-theme del documento, y la elección se persiste entre sesiones
+(useTema + localStorage); tests/ui/useTema.spec.ts valida esto.
+6. La interfaz usa el framework Pico CSS y los tokens de tema (modo
+claro/oscuro) coherentes: editor con números de línea, tipografía
+monoespaciada Pico y sin colores hardcodeados.
