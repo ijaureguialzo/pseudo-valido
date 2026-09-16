@@ -72,19 +72,6 @@ function onEditarContenido(nuevo: string): void {
         <h1 class="titulo-app">
           PseudoVálido
         </h1>
-        <label class="control-tema">
-          <span>Tema</span>
-          <select
-            class="selector-tema"
-            data-testid="selector-tema"
-            :value="tema.modo.value"
-            @change="onCambioTema"
-          >
-            <option value="auto">Auto</option>
-            <option value="claro">Claro</option>
-            <option value="oscuro">Oscuro</option>
-          </select>
-        </label>
       </header>
       <ListaArchivos
         class="lista"
@@ -95,6 +82,21 @@ function onEditarContenido(nuevo: string): void {
         @renombrar="onRenombrar"
         @borrar="onBorrar"
       />
+      <footer class="contenedor-tema">
+          <label class="control-tema">
+            <span>Tema</span>
+            <select
+              class="selector-tema"
+              data-testid="selector-tema"
+              :value="tema.modo.value"
+              @change="onCambioTema"
+            >
+              <option value="auto">Auto</option>
+              <option value="claro">Claro</option>
+              <option value="oscuro">Oscuro</option>
+            </select>
+          </label>
+      </footer>
     </aside>
     <section class="panel-der">
       <BarraEstado
@@ -159,6 +161,10 @@ function onEditarContenido(nuevo: string): void {
   color: var(--pv-text);
 }
 
+.contenedor-tema {
+  padding: 0.3rem 0.8rem;
+}
+
 .control-tema {
   display: inline-flex;
   align-items: center;
@@ -191,6 +197,9 @@ function onEditarContenido(nuevo: string): void {
    .app-grilla {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
+   }
+   .contenedor-tema {
+     padding-top: 1rem;
    }
    .panel-izq {
     border-right: none;
