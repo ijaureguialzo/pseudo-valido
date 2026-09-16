@@ -1,43 +1,56 @@
 {
-  "root": true,
-  "env": {
-    "browser": true,
+ "root": true,
+ "env": {
+     "browser": true,
     "node": true,
     "es2022": true
-  },
-  "parserOptions": {
-    "ecmaVersion": 2022,
-    "sourceType": "module"
-  },
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended"
-  ],
-  "globals": {
-    "test": "readonly",
-    "describe": "readonly",
-    "it": "readonly",
-    "expect": "readonly",
-    "vi": "readonly",
-    "beforeEach": "readonly",
-    "afterEach": "readonly",
-    "beforeAll": "readonly",
-    "afterAll": "readonly"
-  },
-  "ignorePatterns": [
-    "dist",
-    "node_modules",
-    "pnpm-lock.yaml",
-    "coverage"
-  ],
-  "rules": {
-    "no-unused-vars": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "no-constant-condition": "off",
-    "@typescript-eslint/ban-types": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      { "argsIgnorePattern": "^_" }
-    ]
-  }
+    },
+   "parserOptions": {
+     "ecmaVersion": 2022,
+     "sourceType": "module",
+     "parser": "@typescript-eslint/parser"
+    },
+   "extends": [
+     "eslint:recommended",
+     "plugin:@typescript-eslint/recommended",
+     "plugin:vue/vue3-recommended"
+    ],
+   "globals": {
+     "test": "readonly",
+     "describe": "readonly",
+     "it": "readonly",
+     "expect": "readonly",
+     "vi": "readonly",
+     "beforeEach": "readonly",
+     "afterEach": "readonly",
+     "beforeAll": "readonly",
+     "afterAll": "readonly"
+    },
+   "ignorePatterns": [
+     "dist",
+     "node_modules",
+     "pnpm-lock.yaml",
+     "coverage"
+    ],
+   "rules": {
+     "no-unused-vars": "off",
+     "@typescript-eslint/no-explicit-any": "off",
+     "no-constant-condition": "off",
+     "@typescript-eslint/no-unused-vars": [
+       "warn",
+       { "argsIgnorePattern": "^_" }
+      ]
+     },
+   "overrides": [
+    {
+       "files": ["*.vue"],
+      "extends": ["plugin:vue/vue3-recommended"],
+      "parser": "vue-eslint-parser",
+      "parserOptions": {
+        "parser": "@typescript-eslint/parser",
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+        }
+      }
+   ]
 }
