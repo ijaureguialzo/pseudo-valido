@@ -38,6 +38,47 @@ describe('checker semántico', () => {
    expect(r.diagnosticos.filter((d) => d.code === 'M-004').length).toBe(0)
    })
 
+  it('M-016 asignar Entero a variable Cadena', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar x Como Cadena\nx = 7\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
+   expect(r.correcto).toBe(false)
+    })
+
+  it('M-016 asignar Cadena a variable Entero', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar s Como Entero\ns = "hola"\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
+   expect(r.correcto).toBe(false)
+    })
+
+  it('M-016 asignar Cadena a variable Logico', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar b Como Logico\nb = "verdad"\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
+   expect(r.correcto).toBe(false)
+    })
+
+  it('Entero a Real es compatible (sin M-016)', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar r Como Real\nr = 5\nFinAlgoritmo')
+   expect(r.diagnosticos.filter((d) => d.code === 'M-016').length).toBe(0)
+   expect(r.correcto).toBe(true)
+    })
+
+  it('Real a Entero dispara M-016', () => {
+   const r = validar('Algoritmo Prueba\nDeclarar e Como Entero\ne = 3.14\nFinAlgoritmo')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
+   expect(r.correcto).toBe(false)
+    })
+
+  it('M-016 resultado incompatible en Funcion', () => {
+   const r = validar('Funcion f(Definir x Como Entero) -> Cadena\nresultado = x + 1\nFinFuncion')
+   expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
+    })
+
+  it('M-018 Para con inicial no-numerico dispara M-016', () => {
+   const r = validar('Algoritmo Prueba\nPara i = "a" Mientras i < 10 Hacer\nEscribir i\nFinPara\nFinAlgoritmo')
+   const codes = r.diagnosticos.map((d) => d.code)
+   expect(codes).toContain('M-016')
+    })
+
   it('M-002 declaración duplicada', () => {
     expect(codigos('Algoritmo A\nDeclarar x Como Entero\nDeclarar x Como Entero\nFinAlgoritmo'))
       .toContain('M-002')

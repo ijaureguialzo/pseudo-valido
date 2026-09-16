@@ -3,8 +3,10 @@ import {
    Sentencia,
    Expr,
    Tipo,
-   Diagnostico
- } from './tipos'
+   Diagnostico,
+   esNumerico,
+   Token
+} from './tipos'
 
 interface Alcance {
    variables: Map<string, string>
@@ -67,7 +69,45 @@ function estaDeclarada(alc: Alcance, fAlc: Alcance, nom: string): boolean {
 
 function estaInicializada(alc: Alcance, fAlc: Alcance, nom: string): boolean {
   return nom === 'resultado' || alc.inicializadas.has(nom) || fAlc.inicializadas.has(nom)
+}
+
+// Tipo declarado del destino de una asignación/lectura. 'resultado' hereda el
+// tipo de retorno de la función anfitriona; las demás, su declaración.
+function tipoDeclarado(dest: string, alc: Alcance, fAlc: Alcance): Tipo {
+   if (dest === 'resultado') {
+     for (const [, f] of alc.funciones) {
+       const t = mapTipo(f.tipoRetorno)
+       if (t !== Tipo.Desconocido) return t
       }
+     return Tipo.Desconocido
+    }
+   const raw = fAlc.variables.get(dest) ?? alc.variables.get(dest)
+   return raw ? mapTipo(raw) : Tipo.Desconocido
+}
+
+// Compatibilidad estricta (sin conversión): un valor de tipo `fuente` cabe en
+// una variable de tipo `destino` si ambos son numéricos (Entero→Real se ensancha)
+// o si son idénticos. Todo lo demás es M-016. `Desconocido` se deja pasar.
+function compatible(fuente: Tipo, destino: Tipo): boolean {
+   if (fuente === Tipo.Desconocido || destino === Tipo.Desconocido) return true
+   if (destino === Tipo.Entero) return fuente === Tipo.Entero
+   if (destino === Tipo.Real) return esNumerico(fuente)
+   return fuente === destino
+}
+
+function marcarAsignacion(
+     s: { nombre: string; valor: Expr; tok: Token },
+     fAlc: Alcance, alc: Alcance, errores: Diagnostico[], ya: Set<string>
+): void {
+   fAlc.inicializadas.add(s.nombre)
+   const tDest = tipoDeclarado(s.nombre, alc, fAlc)
+   const tVal = inferTipo(s.valor, fAlc, alc)
+   if (!compatible(tVal, tDest)) {
+    marcar(errores, ya, 'M-016', 'M-016:' + s.nombre + ':' + s.tok.line,
+           s.tok.line, s.tok.column,
+           `Tipo incompatible: no se puede asignar (${tVal}) a la variable '${s.nombre}' (${tDest})`)
+    }
+}
 
 function analizarCuerpo(
     cuerpo: Sentencia[], alc: Alcance, fAlc: Alcance,
@@ -95,12 +135,12 @@ function analizarSentencia(
       if (!estaDeclarada(alc, fAlc, s.nombre)) {
          marcar(errores, ya, 'M-001', 'M-001:' + s.nombre,
                 s.tok.line, s.tok.column, `Variable '${s.nombre}' no declarada`)
-       } else {
-         fAlc.inicializadas.add(s.nombre)
-        }
+        } else {
+         marcarAsignacion(s, fAlc, alc, errores, ya)
+         }
       revisarExpr(s.valor, fAlc, alc, errores, ya, funcionActual)
       break
-         }
+          }
     case 'leer': {
       if (!estaDeclarada(alc, fAlc, s.nombre)) {
          marcar(errores, ya, 'M-004', 'M-004:' + s.nombre,
@@ -141,14 +181,32 @@ function analizarSentencia(
       fAlc.inicializadas.add(p.variable)
       revisarExpr(p.inicial, fAlc, alc, errores, ya, funcionActual)
       revisarExpr(p.condicion, fAlc, alc, errores, ya, funcionActual)
+      // El valor inicial es una asignación implícita a la variable de control
+      // (forzada a Entero): exige numerico o dispara M-016.
+      const tIni = inferTipo(p.inicial, fAlc, alc)
+      if (tIni !== Tipo.Desconocido && !esNumerico(tIni)) {
+         marcar(errores, ya, 'M-016', 'M-016:' + p.variable + ':' + p.tok.line,
+                p.tok.line, p.tok.column,
+                `Tipo incompatible: el inicial de 'Para' debe ser numérico`)
+         }
       if (!p.cambio) {
          marcar(errores, ya, 'M-018', 'M-018:' + p.variable,
                 p.tok.line, p.tok.column,
-                'Para sin "Cambio" — posible bucle infinito', 'warning') }
-      if (p.cambio) revisarExpr(p.cambio, fAlc, alc, errores, ya, funcionActual)
-      break
-        }
-    }
+                 'Para sin "Cambio" — posible bucle infinito', 'warning')
+       }
+      if (p.cambio) {
+       revisarExpr(p.cambio, fAlc, alc, errores, ya, funcionActual)
+       // 'Cambio' actualiza el contador: debe ser numérico (M-024).
+       const tCam = inferTipo(p.cambio, fAlc, alc)
+       if (tCam !== Tipo.Desconocido && !esNumerico(tCam)) {
+          marcar(errores, ya, 'M-024', 'M-024:' + p.variable + ':' + p.tok.line,
+                 p.tok.line, p.tok.column,
+                 "'Cambio' con expresión no numerica")
+          }
+          }
+          break
+           }
+          }
 }
 
 function revisarExpr(

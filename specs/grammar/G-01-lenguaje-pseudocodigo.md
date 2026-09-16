@@ -180,7 +180,7 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-013** Llamada con nº de argumentos distinto al esperado.
 - **M-014** Llamada donde se espera que devuelva valor y no lo hace.
 - **M-015** Recursión no declarada (`resultado` en su propia definición).
-- **M-016** Literal incompatible con el tipo de destino sin conversión.
+- **M-016** Tipo de expresión incompatible con la variable de destino (asignación / `resultado` / inicial de `Para`) sin conversión.
 - **M-017** Variable declarada y nunca usada *(warning)*.
 - **M-018** `Para` sin `Cambio` con condición fija → posible bucle infinito *(warning)*.
 - **M-019** Operador aritmético en tipos no-numéricos.
@@ -188,13 +188,19 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-021** Función declarada y nunca llamada *(warning)*.
 - **M-022** Variable de control de `Para` como parámetro (efecto lateral).
 - **M-023** Literal `Logico` en contexto numérico.
-- **M-024** `Cambio` con expresión no-numérica.
+- **M-024** `Cambio` de `Para` con expresión no-numérica.
 
 ### 4.4 Tipos
 - `Entero`/`Real` se subsumen en "numérico"; `+ - * / %` exigen numérico; `%` exige `Entero` en ambos lados.
 - `Logico` con `&&` `||` `!`; ambos operandos `Logico`.
 - `Cadena`/`Caracter`: solo `+` (concatenación) y `==`/`!=` entre tipos homogéneos.
 - `> < >= <=` válidos entre numéricos; incoherentes entre numérico y cadena.
+- **Asignación estricta (M-016):** un valor solo se admite en una variable si ambos tipos son
+  numéricos (un `Entero` ensancha a `Real`) o son idénticos. `Resultado`, el valor inicial de
+  `Para` y la expresión de `Cambio` obedecen la misma regla (en `Para`, el valor de control es
+  `Entero`: su inicial y su `Cambio` deben ser numéricos, o se dispara M-016 / M-024).
+  No hay conversión implícita ni coerción (ver **D7**): `x = 7` con `x: Cadena` es M-016.
+- `Desconocido` (tipo no inferible) se tolera: no produce M-016.
 
 ## 5. Formato de diagnóstico
 
@@ -239,6 +245,13 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `17-para-infinito.pse` | `M-018` (warning) |
 | `18-funcion-recursiva.pse` | `M-015` |
 | `19-no-inicializada.pse` | `M-003` |
+| `20-var-asign-p.pse` | `M-001` (asignar a variable no declarada) |
+| `21-leer-no-declarada.pse` | `M-004` (`Leer` sobre variable no declarada) |
+| `22-ent-cadena.pse` | `M-016` |
+| `23-cadena-ent.pse` | `M-016` |
+| `24-cadena-log.pse` | `M-016` |
+| `25-ent-real-ok.pse` | `correcto=true` (Entero → Real es compatible) |
+| `26-para-no-num.pse` | `M-016` + `M-018` |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -256,7 +269,7 @@ er` admite un único identificador.
 
 ## 8. Criterio de aceptación global
 
-1. La suite de `vitest` pasa en verde para los 19 casos golden (§6).
+1. La suite de `vitest` pasa en verde para los 26 casos golden (§6).
 2. Todo código nuevo tiene al menos una prueba que lo justifica (ratio ≥ 90% línea en `src/validador/`).
 3. El editor muestra los diagnósticos con línea/columna en el gutter y en un panel.
 4. Los archivos persisten en `localStorage`; al recargar, la lista y el activo se restauran.

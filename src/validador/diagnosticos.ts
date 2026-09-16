@@ -54,7 +54,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'M-013': { descripcion: 'Llamada con nº de argumentos distinto al esperado', severity: 'error' },
     'M-014': { descripcion: 'Llamada donde se espera que devuelva valor y no lo hace', severity: 'error' },  
     'M-015': { descripcion: 'Recursión no declarada (resultado en su propia definición)', severity: 'error' },
-    'M-016': { descripcion: 'Literal incompatible con el tipo de destino sin conversión', severity: 'error' },   
+    'M-016': { descripcion: 'Tipo de expresión incompatible con la variable de destino (asignación / resultado / inicial de Para) sin conversión', severity: 'error' },   
     'M-017': { descripcion: 'Variable declarada y nunca usada', severity: 'warning' },  
     'M-018': { descripcion: 'Para sin Cambio con condición fija → posible bucle infinito', severity: 'warning' },
     'M-019': { descripcion: 'Operador aritmético en tipos no-numéricos', severity: 'error' },  
@@ -62,7 +62,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'M-021': { descripcion: 'Función declarada y nunca llamada', severity: 'warning' },  
     'M-022': { descripcion: 'Variable de control de Para como parámetro (efecto lateral)', severity: 'error' },  
     'M-023': { descripcion: 'Literal Logico en contexto numérico', severity: 'error' },
-    'M-024': { descripcion: 'Cambio con expresión no-numérica', severity: 'error' },
+    'M-024': { descripcion: "Cambio de Para con expresión no-numérica", severity: 'error' },
 }
 
 export function getErrorDef(code: string): ErrorDef | null {
