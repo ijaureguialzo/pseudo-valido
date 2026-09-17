@@ -95,6 +95,15 @@ function compatible(fuente: Tipo, destino: Tipo): boolean {
    return fuente === destino
 }
 
+// Compatibilidad de un argumento con su parámetro en una llamada (M-009).
+// Como la llamada es numérica por naturaleza, admite el ensanche entero↔real en
+// ambos sentidos; `Desconocido` se deja pasar (igual que `compatible`, M-016).
+function compatibleArg(fuente: Tipo, destino: Tipo): boolean {
+   if (fuente === Tipo.Desconocido || destino === Tipo.Desconocido) return true
+   if (esNumerico(fuente) && esNumerico(destino)) return true
+   return fuente === destino
+}
+
 function marcarAsignacion(
      s: { nombre: string; valor: Expr; tok: Token },
      fAlc: Alcance, alc: Alcance, errores: Diagnostico[], ya: Set<string>
@@ -229,16 +238,41 @@ function revisarExpr(
     case 'llamada': {
       const def = alc.funciones.get(e.nombre)
       if (!def) {
-         marcar(errores, ya, 'M-012', 'M-012:' + e.nombre,
-                e.tok.line, e.tok.column, `Función '${e.nombre}' no está definida`)
-              break }
-       if (funcionActual === e.nombre) {
-         marcar(errores, ya, 'M-015', 'M-015:' + e.nombre,
-                e.tok.line, e.tok.column,
-                `Recursión no declarada: '${e.nombre}' se llama a sí misma`) }
-      for (const a of e.args) revisarExpr(a, fAlc, alc, errores, ya, funcionActual)
+        marcar(errores, ya, 'M-012', 'M-012:' + e.nombre,
+          e.tok.line, e.tok.column, `Función '${e.nombre}' no está definida`)
+        break
+       }
+      if (funcionActual === e.nombre) {
+        marcar(errores, ya, 'M-015', 'M-015:' + e.nombre,
+          e.tok.line, e.tok.column,
+           `Recursión no declarada: '${e.nombre}' se llama a sí misma`)
+       }
+       // Valida número (M-013) y tipo (M-009) de los argumentos frente a los
+       // parámetros. La compatibilidad numérica admite el ensanche entero↔real
+       // en ambos sentidos (ver G-01 §4.4), a diferencia de la asignación
+       // (M-016), que exige fuente numérica con ensanche a Entero.
+      const args = e.args
+      const pars = def.parametros
+      if (args.length !== pars.length) {
+        marcar(errores, ya, 'M-013', 'M-013:' + e.nombre + ':' + args.length,
+          e.tok.line, e.tok.column,
+           `Nº de argumentos: ${args.length} (esperados ${pars.length})`)
+       } else {
+        let tiposOk = true
+        for (let i = 0; i < pars.length && tiposOk; i++) {
+          const src = mapTipo(inferTipo(args[i], fAlc, alc))
+          const dst = mapTipo(pars[i].tipo)
+          tiposOk = compatibleArg(src, dst)
+         }
+        if (!tiposOk) {
+          marcar(errores, ya, 'M-009', 'M-009:' + e.nombre,
+            e.tok.line, e.tok.column,
+             `Tipos de argumentos incoherentes con los parámetros de '${e.nombre}'`)
+         }
+       }
+      for (const a of args) revisarExpr(a, fAlc, alc, errores, ya, funcionActual)
       break
-          }
+            }
     case 'binaria': {
       revisarExpr(e.izq, fAlc, alc, errores, ya, funcionActual)
       revisarExpr(e.der, fAlc, alc, errores, ya, funcionActual)

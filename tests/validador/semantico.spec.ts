@@ -129,5 +129,44 @@ describe('checker semántico', () => {
     const r = validar('Algoritmo Hola\nEscribir "Hola mundo"\nFinAlgoritmo')
     expect(r.diagnosticos.filter((d) => d.severity === 'error').length).toBe(0)
     expect(r.correcto).toBe(true)
-    })
-})
+     })
+
+   it('M-009 argumento de tipo distinto al parámetro (cadena→Entero en llamada)', () => {
+    const r = validar(
+      'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+      'resultado = a + b\n' +
+      'FinFuncion\n' +
+      'Algoritmo Prueba\n' +
+      'Declarar x Como Entero\n' +
+      'x = sumar("5", 6.0)\n' +
+       'FinAlgoritmo')
+    expect(r.diagnosticos.map((d) => d.code)).toContain('M-009')
+    expect(r.correcto).toBe(false)
+      })
+
+   it('M-009 no se dispara con tipos coincidentes en la llamada', () => {
+    const r = validar(
+      'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+      'resultado = a + b\n' +
+      'FinFuncion\n' +
+       'Algoritmo Prueba\n' +
+       'Declarar x Como Entero\n' +
+       'x = sumar(3, 4)\n' +
+       'FinAlgoritmo')
+    expect(r.diagnosticos.filter((d) => d.code === 'M-009').length).toBe(0)
+    expect(r.correcto).toBe(true)
+      })
+
+   it('M-013 nº de argumentos distinto al de la función', () => {
+    const r = validar(
+      'Funcion f(Declarar a Como Entero) -> Entero\n' +
+      'resultado = a + 1\n' +
+      'FinFuncion\n' +
+       'Algoritmo Prueba\n' +
+       'Declarar x Como Entero\n' +
+       'x = f(1, 2, 3)\n' +
+       'FinAlgoritmo')
+    expect(r.diagnosticos.map((d) => d.code)).toContain('M-013')
+    expect(r.correcto).toBe(false)
+      })
+     })

@@ -1,0 +1,7 @@
+Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero
+  resultado = a + b
+FinFuncion
+Algoritmo Prueba
+  Declarar x Como Entero
+  x = sumar("5", 6.0)
+FinAlgoritmo

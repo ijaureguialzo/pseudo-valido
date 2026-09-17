@@ -1,0 +1,7 @@
+Algoritmo Prueba
+  Declarar y Como Entero
+  y = restar(7, 5)
+FinAlgoritmo
+Funcion restar(Declarar a Como Entero, Declarar b Como Entero) -> Entero
+  resultado = a - b
+FinFuncion

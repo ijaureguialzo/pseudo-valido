@@ -13,9 +13,10 @@
 
 Pseudocódigo textual de un solo programa, basado en PseInt y personalizado.
 Todo el programa va envuelto en un bloque `Algoritmo … FinAlgoritmo`.
-Las funciones se declaran **antes** del bloque principal. La indentación no es
-obligatoria sintácticamente (es legibilidad); el terminador de sentencia es el
-**salto de línea**.
+Las funciones pueden declararse antes o después del bloque principal; solo se
+admiten un único `Algoritmo`/`FinAlgoritmo` (`S-322` si hay más de uno). La
+indentación no es obligatoria sintácticamente (es legibilidad); el terminador
+de sentencia es el **salto de línea**.
 
 ## 2. Léxico
 
@@ -58,7 +59,8 @@ Tipos de datos:    Entero   Real   Logico   Caracter   Cadena
 ## 3. Gramática (EBNF)
 
 ```
-Programa         ::= FuncionDef* Algoritmo                     ; las funciones van ANTES
+Programa         ::= FuncionDef* Algoritmo FuncionDef*             ; el
+                                                            Algoritmo es único (`S-322`)
 
 FuncionDef       ::= "Funcion" Identificador "(" Parametros? ")"
                        "->" Tipo BloqueFuncion "FinFuncion"
@@ -162,6 +164,7 @@ impide que el programa sea "correcto"; `warning` no.
 - **S-019** Token inesperado (con token esperado).
 - **S-020** `Cambio` sin `Para` asociado.
 - **S-021** `DeOtroModo:` sin `Segun` de cierre.
+- **S-322** Segundo `Algoritmo` principal (solo se admite uno; ver EBNF `Programa`).
 
 ### 4.3 Semántico (estricto)
 - **M-001** Variable usada sin declarar en el contexto.
@@ -251,6 +254,10 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `24-cadena-log.pse` | `M-016` |
 | `25-ent-real-ok.pse` | `correcto=true` (Entero → Real es compatible) |
 | `26-para-no-num.pse` | `M-016` + `M-018` |
+| `27-llamada-tipo.pse`   | `M-009` (tipo de argumento distinto al parámetro) |
+| `28-llamada-num-args.pse`|`M-013` (nº de argumentos distinto) |
+| `29-funcion-despues.pse` | `correcto=true` (la función va después del Algoritmo) |
+| `30-dos-algoritmos.pse`  | `S-322` (segundo `Algoritmo` no permitido) |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -267,10 +274,14 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 er` admite un único identificador.
 - **D9.** El validador es un **módulo puro** (sin I/O), testeable en Node.
 - **D10.** La UI persiste archivos en **localStorage** del navegador.
+- **D11.** La función puede quedar antes **o** después del `Algoritmo`; solo se
+  admite **un** `Algoritmo` (`S-322` en caso contrario), y hay 0..n funciones en
+  cualquier orden. En una llamada se validan nº de argumentos (`M-013`) y tipo por
+  argumento frente al parámetro (`M-009`); numérico↔numérico es compatible.
 
 ## 8. Criterio de aceptación global
 
-1. La suite de `vitest` pasa en verde para los 26 casos golden (§6).
+1. La suite de `vitest` pasa en verde para los 30 casos golden (§6).
 2. Todo código nuevo tiene al menos una prueba que lo justifica (ratio ≥ 90% línea en `src/validador/`).
 3. El editor muestra los diagnósticos con línea/columna en el gutter y en un panel.
 4. Los archivos persisten en `localStorage`; al recargar, la lista y el activo se restauran.

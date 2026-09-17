@@ -41,14 +41,27 @@ export function parsear(texto: string): { ast: Astrogram; errores: Diagnostico[]
    while (curr(ctx).tipo !== 'EOF') {
      if (isKey(ctx, 'Funcion')) {
        funciones.push(parseFuncion(ctx))
-     } else if (isKey(ctx, 'Algoritmo')) {
-       algoritmo = parseAlgoritmo(ctx)
-       break
-     } else {
-       const t = advance(ctx)
-       ctx.errores.push(err('S-001', `Esperaba 'Algoritmo' o 'Funcion'`, t.line, t.column))
-     }
-   }
+       // Tras el Algoritmo pueden ir más Funciones (G-01 §3): se sigue
+       // parseando; el segundo Algoritmo se detecta abajo en la siguiente
+       // iteración (ya 'algoritmo' no es null) y marca S-322.
+      } else if (algoritmo !== null) {
+      // Ya existe un algoritmo principal: no se admite otro (S-322). Si se
+      // detecta un segundo 'Algoritmo' se consume su cuerpo entero para no
+      // marcar el error en cada token; el resto se desecha uno a uno.
+      if (isKey(ctx, 'Algoritmo')) {
+      const segAlgo = parseAlgoritmo(ctx)
+      ctx.errores.push(err('S-322', `Segundo algoritmo principal: solo se admite uno`, segAlgo.tok.line, segAlgo.tok.column))
+       } else {
+      const t = advance(ctx)
+      ctx.errores.push(err('S-322', `Contenido tras el algoritmo principal no permitido`, t.line, t.column))
+       }
+      } else if (isKey(ctx, 'Algoritmo')) {
+      algoritmo = parseAlgoritmo(ctx)
+      } else {
+      const t = advance(ctx)
+      ctx.errores.push(err('S-001', `Esperaba 'Algoritmo' o 'Funcion'`, t.line, t.column))
+      }
+      }
 
    return { ast: { funciones, algoritmo }, errores }
 }

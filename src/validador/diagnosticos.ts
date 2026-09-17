@@ -15,7 +15,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'L-005': { descripcion: 'Identificador que empieza por dígito', severity: 'error' },
     'L-006': { descripcion: 'Espacio en el interior de un número decimal', severity: 'error' },
     
-    // === SINTÁCTICO (21 errores) ===  
+    // === SINTÁCTICO (22 errores) ===
     'S-001': { descripcion: 'Programa vacío / no empieza con Algoritmo o Funcion', severity: 'error' },
     'S-002': { descripcion: 'Algoritmo sin FinAlgoritmo de cierre', severity: 'error' },
     'S-003': { descripcion: 'Funcion sin FinFuncion de cierre', severity: 'error' },
@@ -37,6 +37,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'S-019': { descripcion: 'Token inesperado (con token esperado)', severity: 'error' },
     'S-020': { descripcion: 'Cambio sin Para asociado', severity: 'error' },
     'S-021': { descripcion: 'DeOtroModo: sin Segun de cierre', severity: 'error' },
+    'S-322': { descripcion: 'Segundo algoritmo principal (solo se admite uno)', severity: 'error' },
 
     // === SEMÁNTICO (24 errores) — solo los que tienen severidad different ===  
     'M-001': { descripcion: 'Variable usada sin declarar en el contexto', severity: 'error' },

@@ -28,12 +28,12 @@ describe('diagnosticos', () => {
       expect(keys).toEqual(['L-001', 'L-002', 'L-003', 'L-004', 'L-005', 'L-006'])  
    })
 
-   it('tiene 21 errores sintácticos (S-001 a S-021)', () => { 
+   it('tiene 22 errores sintácticos (S-001 a S-021, S-322)', () => { 
          const keys = Object.keys(diag.ERRORS)
-             .filter(k => k.startsWith('S-'))
-             .sort()
-         expect(keys.length).toBe(21)   
-   })
+              .filter(k => k.startsWith('S-'))
+              .sort()
+         expect(keys.length).toBe(22)    
+    })
 
    it('tiene 24 errores semánticos (M-001 a M-024)', () => {  
          const keys = Object.keys(diag.ERRORS)

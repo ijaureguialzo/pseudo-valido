@@ -54,7 +54,26 @@ describe('parser sintáctico', () => {
    it('falta FinSi -> S-004', () => {
      const { errores } = parsear('Algoritmo A\nSi x > 0 Entonces Escribir "x" FinAlgoritmo')
      expect(errores.some((e) => e.code === 'S-004')).toBe(true)
-    })
+     })
+
+   it('la función puede ir después del Algoritmo (S-322 no se dispara)', () => {
+     const { ast, errores } = parsear(
+        'Algoritmo Prueba\nDeclarar y Como Entero\ny = restar(7, 5)\nFinAlgoritmo\n' +
+        'Funcion restar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+        'resultado = a - b\nFinFuncion')
+     expect(ast.algoritmo?.t).toBe('algoritmo')
+     expect(ast.funciones.length).toBe(1)
+     expect(ast.funciones[0].nombre).toBe('restar')
+     expect(errores.some((e) => e.code === 'S-322')).toBe(false)
+     })
+
+   it('un segundo Algoritmo dispara S-322 (solo un principal)', () => {
+     const { ast, errores } = parsear(
+        'Algoritmo Hola\nEscribir 1\nFinAlgoritmo\n' +
+        'Algoritmo Otra\nEscribir 2\nFinAlgoritmo')
+     expect(ast.algoritmo?.nombre).toBe('Hola')
+     expect(errores.some((e) => e.code === 'S-322')).toBe(true)
+     })
 
    it('no produce errores de sintaxis en los programas correctos (golden)', () => {
      const files = readdirSync(CASES_DIR).filter((f) => f.endsWith('.pse'))

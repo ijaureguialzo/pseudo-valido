@@ -1,0 +1,7 @@
+Funcion f(Declarar a Como Entero) -> Entero
+  resultado = a + 1
+FinFuncion
+Algoritmo Prueba
+  Declarar x Como Entero
+  x = f(1, 2, 3)
+FinAlgoritmo
