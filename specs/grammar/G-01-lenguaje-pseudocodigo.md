@@ -1,6 +1,6 @@
 # G-01 · Lenguaje de pseudocódigo (gramática + semántica)
 
-> **Estatus:** Baseline. Fuente de verdad: `03_disenyo_algoritmos.pdf` (41 slides).
+> **Estatus:** Baseline. Fuente de verdad: `docs/03_disenyo_algoritmos.pdf` (41 slides).
 > **Tipo:** Especificación de dominio (SDD) — contrato del módulo validador.
 > **Criterio de aceptación automático:** toda prueba de este documento debe pasar
 > (`npm run test`); ver `specs/grammar/cases/` con los programas de prueba.
