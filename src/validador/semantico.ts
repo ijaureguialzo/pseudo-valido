@@ -41,15 +41,24 @@ function copiar(src: Alcance, dst: Alcance): void {
    for (const k of src.inicializadas) dst.inicializadas.add(k)
       }
 
-function procesarFunciones(ast: Astrogram, alc: Alcance): void {
+function procesarFunciones(
+    ast: Astrogram, alc: Alcance,
+    errores: Diagnostico[], ya: Set<string>
+): void {
   for (const f of ast.funciones) {
+    // M-025: una función no puede declararse dos veces con el mismo nombre.
+    // La segunda (y sucesivas) definición se marca por su token de apertura.
+    if (alc.funciones.has(f.nombre)) {
+       marcar(errores, ya, 'M-025', 'M-025:' + f.nombre,
+          f.tok.line, f.tok.column,
+             `La función '${f.nombre}' ya está declarada`)
+       }
     alc.funciones.set(f.nombre, {
        parametros: f.parametros, cuerpo: f.cuerpo, tipoRetorno: f.tipoRetorno })
-       for (const p of f.parametros) {
-         alc.variables.set(p.nombre, p.tipo)
-         alc.inicializadas.add(p.nombre)
-            }
-        }
+    // D-alcance: los parámetros NO se registran en el ámbito del programa
+    // principal: el ámbito de un parámetro es la propia función que lo
+    // declara. Por eso `sumar(a, b)` fuera de su definición dispara M-001.
+       }
 }
 
 function marcar(
@@ -86,21 +95,13 @@ function tipoDeclarado(dest: string, alc: Alcance, fAlc: Alcance): Tipo {
 }
 
 // Compatibilidad estricta (sin conversión): un valor de tipo `fuente` cabe en
-// una variable de tipo `destino` si ambos son numéricos (Entero→Real se ensancha)
-// o si son idénticos. Todo lo demás es M-016. `Desconocido` se deja pasar.
+// una variable de tipo `destino` si ambos son numéricos (Entero→Real se ensancha
+// en un único sentido) o si son idénticos. Todo lo demás es M-016 / M-009.
+// `Desconocido` se deja pasar.
 function compatible(fuente: Tipo, destino: Tipo): boolean {
    if (fuente === Tipo.Desconocido || destino === Tipo.Desconocido) return true
    if (destino === Tipo.Entero) return fuente === Tipo.Entero
    if (destino === Tipo.Real) return esNumerico(fuente)
-   return fuente === destino
-}
-
-// Compatibilidad de un argumento con su parámetro en una llamada (M-009).
-// Como la llamada es numérica por naturaleza, admite el ensanche entero↔real en
-// ambos sentidos; `Desconocido` se deja pasar (igual que `compatible`, M-016).
-function compatibleArg(fuente: Tipo, destino: Tipo): boolean {
-   if (fuente === Tipo.Desconocido || destino === Tipo.Desconocido) return true
-   if (esNumerico(fuente) && esNumerico(destino)) return true
    return fuente === destino
 }
 
@@ -262,14 +263,14 @@ function revisarExpr(
         for (let i = 0; i < pars.length && tiposOk; i++) {
           const src = mapTipo(inferTipo(args[i], fAlc, alc))
           const dst = mapTipo(pars[i].tipo)
-          tiposOk = compatibleArg(src, dst)
-         }
+          tiposOk = compatible(src, dst)
+          }
         if (!tiposOk) {
           marcar(errores, ya, 'M-009', 'M-009:' + e.nombre,
             e.tok.line, e.tok.column,
-             `Tipos de argumentos incoherentes con los parámetros de '${e.nombre}'`)
-         }
-       }
+              `Tipos de argumentos incoherentes con los parámetros de '${e.nombre}'`)
+          }
+        }
       for (const a of args) revisarExpr(a, fAlc, alc, errores, ya, funcionActual)
       break
             }
@@ -333,12 +334,19 @@ export function checkSemantico(ast: Astrogram): Diagnostico[] {
   const errores: Diagnostico[] = []
   const ya = new Set<string>()
 
-  procesarFunciones(ast, alc)
+  procesarFunciones(ast, alc, errores, ya)
 
   for (const f of ast.funciones) {
     const fAlc = nuevoAlcance()
     copiar(alc, fAlc)
-    analizarCuerpo(f.cuerpo, alc, fAlc, errores, ya, f.nombre) }
+    // D-alcance: la función ve sus propios parámetros como variables locales
+    // (y ya valorados al entrar), pero NO las hereda del cuerpo principal,
+    // ni las deja caer fuera de su propio alcance.
+    for (const p of f.parametros) {
+       fAlc.variables.set(p.nombre, p.tipo)
+       fAlc.inicializadas.add(p.nombre)
+        }
+    analizarCuerpo(f.cuerpo, alc, fAlc, errores, ya, f.nombre ) }
 
   if (ast.algoritmo) {
     const fAlc = nuevoAlcance()

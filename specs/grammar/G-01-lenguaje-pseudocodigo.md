@@ -175,11 +175,12 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-006** Tipo inválido en el parámetro de una función (`Declarar … Como`).
 - **M-007** Tipo de retorno no coincide con el tipo de `resultado`.
 - **M-008** `resultado` no asignado en alguna trayectoria (no-asignación).
-- **M-009** Parámetro de función con tipo distinto al de la llamada. Un argumento
-  numérico (`Entero` o `Real`) es **compatible** con cualquier parámetro numérico
-  (ambos sentidos: `Entero` y `Real` se ensanchan), a diferencia de la asignación
-  `M-016`, que exige el ensanche en un único sentido. Por tanto `sumar(5, 5.7)`
-  encaja en `sumar(Declarar a Como Entero, …)` sin error.
+- **M-009** Parámetro de función con tipo distinto al de la llamada. La llamada
+  usa la **misma regla estricta** que la asignación (`M-016`): un parámetro
+  `Entero` solo admite un argumento `Entero` (un `Real` ensanchado **no** es
+  válido), `Real` admite cualquier tipo numérico, y los demás tipos exigen
+  coincidencia exacta. Por tanto `sumar(5, 5.7)` frente a un parámetro `Entero`
+  **dispara M-009** y `sumar(5, 5)` no.
 - **M-010** Tipo de expresión incoherente con el operando esperado (p.ej. `&&` no-`Logico`).
 - **M-011** Variable de control de `Para` usada fuera del ciclo.
 - **M-012** Llamada a función no definida.
@@ -195,6 +196,7 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-022** Variable de control de `Para` como parámetro (efecto lateral).
 - **M-023** Literal `Logico` en contexto numérico.
 - **M-024** `Cambio` de `Para` con expresión no-numérica.
+- **M-025** Función declarada dos veces con el mismo nombre (ver `D-redef`).
 
 ### 4.4 Tipos
 - `Entero`/`Real` se subsumen en "numérico"; `+ - * / %` exigen numérico; `%` exige `Entero` en ambos lados.
@@ -207,16 +209,15 @@ impide que el programa sea "correcto"; `warning` no.
   `Entero`: su inicial y su `Cambio` deben ser numéricos, o se dispara M-016 / M-024).
   No hay conversión implícita ni coerción (ver **D7**): `x = 7` con `x: Cadena` es M-016.
 - `Desconocido` (tipo no inferible) se tolera: no produce M-016.
-- **Alcance de parámetros (D-alcance):** los parámetros de **toda** función
-  declarada en el programa (incluida su versión redefinida) quedan registrados
-  como identificadores del programa. No se produce M-001 por usar un parámetro
-  (p. ej. `sumar(a, b)`) en el programa principal aunque `a`/`b` no se declaren
-   allí. Es un alcance global del programa, no un ámbito local de la función.
-- **Redefinición de funciones (D-redef):** una función puede declararse **varias
-  veces con el mismo nombre** sin error de duplicada (no se aplica M-002 a
-  funciones). El registro es de tipo `Map` (última definición gana); solo se
-  admite un único `Algoritmo` (`S-322`), pero 0..n funciones en cualquier orden,
-  con nombres repetidos.
+- **Alcance de parámetros (D-alcance):** el ámbito de un parámetro es **la
+  función que lo declara**; no se expone al programa principal. Por tanto un
+  identificador que comparte nombre con un parámetro de `sumar` (p. ej. `a` o
+  `b`) debe **declararse** en el propio `Algoritmo` antes de usarse; su ausencia
+  es **M-001**.
+- **Redefinición de funciones (D-redef):** cada función se declara **una sola
+  vez** con su nombre. Dos declaraciones con el mismo nombre constituyen un
+  error **M-025** (no se aplica M-002, que es interno al contexto de variables).
+  Solo se admite un único `Algoritmo` (`S-322`).
 
 ## 5. Formato de diagnóstico
 
@@ -272,9 +273,9 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `28-llamada-num-args.pse`|`M-013` (nº de argumentos distinto) |
 | `29-funcion-despues.pse` | `correcto=true` (la función va después del Algoritmo) |
 | `30-dos-algoritmos.pse`   | `S-322` (segundo `Algoritmo` no permitido) |
-| `31-llamada-real-ok.pse`  | `correcto=true` (arg. `Real` en parámetro `Entero`, numérico↔numérico es compatible — P1) |
-| `32-param-visibles-ok.pse`| `correcto=true` (parámetros visibles en el principal; `sumar(a, b)` sin M-001 — P2) |
-| `33-funcion-redefin-ok.pse`| `correcto=true` (la función puede redefinirse con el mismo nombre — P3) |
+| `31-llamada-real.pse`      | `M-009` (arg. `Real` no encaja en parámetro `Entero`, P1) |
+| `32-param-visibles.pse`    | `M-001` ×2 (`a`/`b` de `sumar` no visibles en el principal, P2) |
+| `33-funcion-redefin.pse`   | `M-025` (función `sumar` declarada dos veces, P3) |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -294,9 +295,11 @@ er` admite un único identificador.
 - **D11.** La función puede quedar antes **o** después del `Algoritmo`; solo se
   admite **un** `Algoritmo` (`S-322` en caso contrario), y hay 0..n funciones en
   cualquier orden. En una llamada se validan nº de argumentos (`M-013`) y tipo por
-  argumento frente al parámetro (`M-009`); numérico↔numérico es compatible. Los
-  parámetros de una función quedan **visibles en todo el programa** (`D-alcance`)
-  y una función **puede redefinirse** con el mismo nombre sin error (`D-redef`).
+  argumento frente al parámetro (`M-009`), con la **misma regla estricta** que
+  la asignación (`M-016`): un parámetro `Entero` no admite `Real` ensanchado.
+  Los parámetros **no se exponen** fuera de su propia función (`D-alcance`; su
+  ausencia en el principal es `M-001`), y cada función se declara **una sola
+  vez** (`D-redef`; una redefinición es `M-025`).
 
 ## 8. Criterio de aceptación global
 

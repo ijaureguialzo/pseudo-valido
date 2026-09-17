@@ -2,40 +2,67 @@
 import { describe, it, expect } from 'vitest'
 import { validar } from '../../src/validador'
 
-// Ejercicio de las tres reglas que la petición de 2026-09-17 pidió corregir:
-// (1) un argumento Real encaja en un parámetro Entero (compatibilidad numérica,
-//     no M-009); (2) los parámetros de una función están visibles en el programa
-//     principal, por lo que una llamada `sumar(a, b)` con `a`/`b` sin declarar
-//     localmente NO dispara M-001; (3) redefinir una función con un nombre ya
-//     usado NO dispara error de duplicada.
-describe('funciones: tipos de llamada, alcance y redefinición', () => {
-  it('P1: argumento Real frente a parámetro Entero no dispara M-009', () => {
+// Comportamiento fijado en G-01 (D-alcance / D-redef / M-009 estricto):
+// (1) un argumento Real NO cabe en un parámetro Entero: dispara M-009.
+// (2) el ámbito de un parámetro es la propia función: en el programa principal,
+//     usar `a`/`b` (parámetros de `sumar`) sin declararlas dispara M-001.
+// (3) una función NO puede declararse dos veces con el mismo nombre: dispara M-025.
+describe('funciones: tipos de llamada, alcance y redefinición (deben fallar)', () => {
+  it('P1: argumento Real frente a parámetro Entero dispara M-009', () => {
     const r = validar(
-        'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
-        'resultado = a + b\n' +
-        'FinFuncion\n' +
-        'Algoritmo Prueba\n' +
-        'Declarar x Como Entero\n' +
-        'x = sumar(5, 5.7)\n' +
-         'FinAlgoritmo')
-    expect(r.diagnosticos.filter((d) => d.code === 'M-009').length).toBe(0)
-    expect(r.correcto).toBe(true)
-    })
+         'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+         'resultado = a + b\n' +
+         'FinFuncion\n' +
+         'Algoritmo Prueba\n' +
+         'Declarar x Como Entero\n' +
+         'x = sumar(5, 5.7)\n' +
+          'FinAlgoritmo')
+    expect(r.correcto).toBe(false)
+    expect(r.diagnosticos.map((d) => d.code)).toContain('M-009')
+      })
 
-  it('P2: parámetros de función visibles en el principal (sin M-001)', () => {
+  it('P1.b: argumento Entero frente a parámetro Entero NO dispara M-009 (coincidente)', () => {
     const r = validar(
-        'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
-        'resultado = a + b\n' +
-        'FinFuncion\n' +
-        'Algoritmo Prueba\n' +
-        'Declarar x Como Entero\n' +
-        'x = sumar(a, b)\n' +
+         'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+         'resultado = a + b\n' +
+         'FinFuncion\n' +
+         'Algoritmo Prueba\n' +
+         'Declarar x Como Entero\n' +
+         'x = sumar(5, 5)\n' +
+          'FinAlgoritmo')
+    expect(r.correcto).toBe(true)
+    expect(r.diagnosticos.length).toBe(0)
+      })
+
+  it('P2: parámetros de función NO visibles en el principal (sumar(a,b) da M-001)', () => {
+    const r = validar(
+         'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+         'resultado = a + b\n' +
+         'FinFuncion\n' +
+         'Algoritmo Prueba\n' +
+         'Declarar x Como Entero\n' +
+         'x = sumar(a, b)\n' +
+          'FinAlgoritmo')
+    expect(r.correcto).toBe(false)
+    const codes = r.diagnosticos.map((d) => d.code)
+    expect(codes).toContain('M-001')
+     // Los dos argumentos `a` y `b` no están declarados en el programa principal.
+    expect(codes.filter((c) => c === 'M-001').length).toBe(2)
+      })
+
+  it('P2.b: dentro de su propia definición, el parámetro SÍ está en alcance', () => {
+     // Dentro del cuerpo de `sumar`, `a` y `b` son variables locales válidas.
+    const r = validar(
+         'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
+         'resultado = a + b\n' +
+         'FinFuncion\n' +
+         'Algoritmo Prueba\n' +
          'FinAlgoritmo')
+    expect(r.correcto).toBe(true)
     expect(r.diagnosticos.filter((d) => d.code === 'M-001').length).toBe(0)
-    expect(r.correcto).toBe(true)
-    })
+      })
 
-  it('P3: redefinir una función ya declarada no dispara error de duplicada', () => {
+  it('P3: redefinir una función ya declarada dispara M-025', () => {
     const r = validar(
          'Funcion sumar(Declarar a Como Entero, Declarar b Como Entero) -> Entero\n' +
          'resultado = a + b\n' +
@@ -47,7 +74,7 @@ describe('funciones: tipos de llamada, alcance y redefinición', () => {
          'Declarar x Como Entero\n' +
          'x = sumar(5, 5)\n' +
           'FinAlgoritmo')
-    expect(r.diagnosticos.length).toBe(0)
-    expect(r.correcto).toBe(true)
-     })
+    expect(r.correcto).toBe(false)
+    expect(r.diagnosticos.map((d) => d.code)).toContain('M-025')
+      })
  })

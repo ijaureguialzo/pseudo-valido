@@ -18,8 +18,8 @@ describe('diagnosticos', () => {
    it('exporta M códigos semánticos', () => {  
       expect(diag.ERRORS['M-001']).toBeDefined()
       expect(diag.ERRORS['M-003']).toBeDefined()
-       // ... M-005 a M-024
-    })
+       // ... M-005 a M-025
+     })
 
    it('tiene 7 errores léxicos (L-001 a L-006)', () => {  
       const keys = Object.keys(diag.ERRORS)
@@ -35,12 +35,12 @@ describe('diagnosticos', () => {
          expect(keys.length).toBe(22)    
     })
 
-   it('tiene 24 errores semánticos (M-001 a M-024)', () => {  
+   it('tiene 25 errores semánticos (M-001 a M-025)', () => {
          const keys = Object.keys(diag.ERRORS)
-             .filter(k => k.startsWith('M-'))
-             .sort() 
-         expect(keys.length).toBe(24)    
-   })
+              .filter(k => k.startsWith('M-'))
+              .sort()
+         expect(keys.length).toBe(25)
+    })
 
    it('tiene al menos una entrada warning', () => { 
       const entries = Object.values(diag.ERRORS)  

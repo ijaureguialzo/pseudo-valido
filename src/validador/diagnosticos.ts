@@ -64,6 +64,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'M-022': { descripcion: 'Variable de control de Para como parámetro (efecto lateral)', severity: 'error' },  
     'M-023': { descripcion: 'Literal Logico en contexto numérico', severity: 'error' },
     'M-024': { descripcion: "Cambio de Para con expresión no-numérica", severity: 'error' },
+    'M-025': { descripcion: 'Función declarada dos veces (nombre ya usado)', severity: 'error' },
 }
 
 export function getErrorDef(code: string): ErrorDef | null {
