@@ -85,7 +85,8 @@ function alRenombrar(nombre: string): void {
 }
 
 .cabecera {
-  padding-left: 0.3rem;
+  padding-left: 0.5rem;
+  padding-bottom: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,7 +95,7 @@ function alRenombrar(nombre: string): void {
 }
 
 .titulo-seccion {
-  margin: 0 0 0.5rem 0;
+  margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
   font-family: var(--pico-font-family, system-ui, sans-serif);
