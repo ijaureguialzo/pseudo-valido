@@ -38,9 +38,9 @@ describe('parser sintáctico', () => {
      expect(errores.filter((e) => e.code.startsWith('S-')).length).toBe(0)
     })
 
-   it('parsea Funcion f(Definir x Como Entero) -> Entero ... FinFuncion', () => {
+   it('parsea Funcion f(Declarar x Como Entero) -> Entero ... FinFuncion', () => {
      const { ast, errores } = parsear(
-        'Funcion f(Definir x Como Entero) -> Entero\n  resultado = x + 1\nFinFuncion\nAlgoritmo A\nFinAlgoritmo')
+         'Funcion f(Declarar x Como Entero) -> Entero\n  resultado = x + 1\nFinFuncion\nAlgoritmo A\nFinAlgoritmo')
      expect(ast.funciones.length).toBe(1)
      expect(ast.funciones[0].parametros[0].nombre).toBe('x')
      expect(errores.filter((e) => e.code.startsWith('S-')).length).toBe(0)

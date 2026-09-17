@@ -179,7 +179,7 @@ export interface Astrogram {
 // 'resultado' NO es reservada: es un identificador normal (variable especial
 // del cuerpo de una función).
 export const PALABRAS_CLAVE = new Set<string>([
-   'Algoritmo','FinAlgoritmo','Funcion','FinFuncion','Definir','Declarar','Como',
+   'Algoritmo','FinAlgoritmo','Funcion','FinFuncion','Declarar','Como',
    'Escribir','Leer','Si','Entonces','SiNo','FinSi','Segun','Hacer','DeOtroModo','FinSegun',
    'Mientras','FinMientras','Repetir','Para','FinPara','Cambio',
    'verdadero','falso','Entero','Real','Logico','Caracter','Cadena'

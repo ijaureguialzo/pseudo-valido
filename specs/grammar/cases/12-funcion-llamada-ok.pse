@@ -1,4 +1,4 @@
-Funcion suma2(Definir a Como Entero, Definir b Como Entero) -> Entero
+Funcion suma2(Declarar a Como Entero, Declarar b Como Entero) -> Entero
   resultado = a + b
 FinFuncion
 Algoritmo Prueba

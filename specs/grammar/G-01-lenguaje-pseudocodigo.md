@@ -24,14 +24,13 @@ obligatoria sintácticamente (es legibilidad); el terminador de sentencia es el
 ```
 Bloque principal:  Algoritmo   FinAlgoritmo
 Función:           Funcion     FinFuncion
-Declaración:       Declarar    Como
+Declaración:       Declarar    Como    (variables y parámetros)
 I/O:               Escribir    Leer
 Alternativas:      Si          Entonces   SiNo   FinSi
                   Segun       Hacer      DeOtroModo   FinSegun
 Repetitivas:       Mientras    FinMientras
                   Repetir
                   Para        Cambio
-Parámetros:        Definir
 Literals booleanos: verdadero   falso
 Tipos de datos:    Entero   Real   Logico   Caracter   Cadena
 ```
@@ -64,8 +63,8 @@ Programa         ::= FuncionDef* Algoritmo                     ; las funciones v
 FuncionDef       ::= "Funcion" Identificador "(" Parametros? ")"
                        "->" Tipo BloqueFuncion "FinFuncion"
 
-Parametros       ::= "Definir" Identificador "Como" Tipo
-                       { "," "Definir" Identificador "Como" Tipo }
+Parametros       ::= "Declarar" Identificador "Como" Tipo
+                        { "," "Declarar" Identificador "Como" Tipo }
 
 Algoritmo        ::= "Algoritmo" Identificador Declaracion* Sentencia* "FinAlgoritmo"
 
@@ -157,7 +156,7 @@ impide que el programa sea "correcto"; `warning` no.
 - **S-013** LHS de `=` que no es un identificador simple.
 - **S-014** `Para` sin `=` inicial.
 - **S-015** `Segun` sin `Hacer`.
-- **S-016** `Definir` usada fuera de `Parametros`/`Declarar`.
+- **S-016** `Declarar` fuera de su contexto (nómina de declaración o parámetro).
 - **S-017** Operador binario sin operando de derecha.
 - **S-018** Paréntesis desparejado.
 - **S-019** Token inesperado (con token esperado).
@@ -170,7 +169,7 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-003** Variable usada antes de su inicialización (no-asignación).
 - **M-004** `Leer` sobre identificador no declarado.
 - **M-005** Tipo inválido en `Declarar … Como`.
-- **M-006** Tipo inválido en `Definir … Como`.
+- **M-006** Tipo inválido en el parámetro de una función (`Declarar … Como`).
 - **M-007** Tipo de retorno no coincide con el tipo de `resultado`.
 - **M-008** `resultado` no asignado en alguna trayectoria (no-asignación).
 - **M-009** Parámetro de función con tipo distinto al de la llamada.
@@ -259,7 +258,9 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 - **D2.** `Repetir … Mientras` → **do-while** (cuerpo una vez, cierre con `Mientras`).
 - **D3.** `Para i = a Mientras c Cambio e Hacer` → **for** con paso opcional.
 - **D4.** `FinPara` y `FinMientras` → **sí** cierran.
-- **D5.** Funciones → **sí** soportadas: `Funcion f(Definir p Como T) -> T … FinFuncion`.
+- **D5.** Funciones → **sí** soportadas: `Funcion f(Declarar p Como T) -> T … FinFuncion`
+  (los parámetros se declaran con la misma palabra clave `Declarar`, sin una
+  palabra reservada distinta).
 - **D6.** Tipos: `Entero`, `Real`, `Logico`, `Caracter`, `Cadena`.
 - **D7.** Coerción implícita en `+` entre `Cadena` y numérico → **no** (error M-019/020).
 - **D8.** `Le

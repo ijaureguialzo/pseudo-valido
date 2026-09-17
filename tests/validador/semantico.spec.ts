@@ -69,7 +69,7 @@ describe('checker semántico', () => {
     })
 
   it('M-016 resultado incompatible en Funcion', () => {
-   const r = validar('Funcion f(Definir x Como Entero) -> Cadena\nresultado = x + 1\nFinFuncion')
+   const r = validar('Funcion f(Declarar x Como Entero) -> Cadena\nresultado = x + 1\nFinFuncion')
    expect(r.diagnosticos.map((d) => d.code)).toEqual(['M-016'])
     })
 
@@ -101,7 +101,7 @@ describe('checker semántico', () => {
 
    it('M-015 recursión no declarada', () => {
     expect(
-     codigos('Funcion f(Definir x Como Entero) -> Entero\nresultado = f(x)\nFinFuncion\nAlgoritmo A\nFinAlgoritmo'))
+     codigos('Funcion f(Declarar x Como Entero) -> Entero\nresultado = f(x)\nFinFuncion\nAlgoritmo A\nFinAlgoritmo'))
       .toContain('M-015')
    })
 

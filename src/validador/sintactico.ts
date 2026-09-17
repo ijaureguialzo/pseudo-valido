@@ -135,7 +135,7 @@ function parseFuncion(ctx: Ctx): NodoFuncion {
 }
 
 function parseParam(ctx: Ctx): { nombre: string; tipo: string } {
-   expectKey(ctx, 'Definir', 'Parámetro: espero "Definir"')
+   expectKey(ctx, 'Declarar', 'Parámetro: espero "Declarar"')
    const nombre = expectIdent(ctx, 'Parámetro: nombre')
    expectKey(ctx, 'Como', 'Parámetro: espero "Como"')
    const tipo = expectTipo(ctx)

@@ -1,4 +1,4 @@
-Funcion esMayorDeEdad(Definir e Como Entero) -> Logico
+Funcion esMayorDeEdad(Declarar e Como Entero) -> Logico
   resultado = e >= 18
 FinFuncion
 Algoritmo Llamar

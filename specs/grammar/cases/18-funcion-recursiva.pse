@@ -1,4 +1,4 @@
-Funcion factorial(Definir n Como Entero) -> Entero
+Funcion factorial(Declarar n Como Entero) -> Entero
   resultado = n * factorial(n - 1)
 FinFuncion
 Algoritmo F

@@ -210,7 +210,7 @@ test('parsea Segun/Hacer/FinSegun con DeOtroModo', () => { /* ... */ })
 test('parsea Mientras/Hacer/FinMientras', () => { /* ... */ })
 test('parsea Repetir ... Mientras (do-while, sin FinRepetir)', () => { /* ... */ })
 test('parsea Para i=1 Mientras i<10 Cambio i+1 Hacer ... FinPara', () => { /* ... */ })
-test('parsea Funcion f(Definir x Como Entero) -> Entero ... FinFuncion', () => { /* ... */ })
+test('parsea Funcion f(Declarar x Como Entero) -> Entero ... FinFuncion', () => { /* ... */ })
 test('falta FinAlgoritmo -> S-002', () => {
   expect(parsear('Algoritmo A').errores[0].code).toBe('S-002')
 })
