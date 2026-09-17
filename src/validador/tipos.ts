@@ -7,6 +7,7 @@ export enum Tipo {
    Logico = 'Logico',
    Caracter = 'Caracter',
    Cadena = 'Cadena',
+   Nada = 'Nada',
    Desconocido = 'Desconocido'
  }
 
@@ -182,5 +183,5 @@ export const PALABRAS_CLAVE = new Set<string>([
    'Algoritmo','FinAlgoritmo','Funcion','FinFuncion','Declarar','Como',
    'Escribir','Leer','Si','Entonces','SiNo','FinSi','Segun','Hacer','DeOtroModo','FinSegun',
    'Mientras','FinMientras','Repetir','Para','FinPara','Cambio',
-   'verdadero','falso','Entero','Real','Logico','Caracter','Cadena'
+   'verdadero','falso','Entero','Real','Logico','Caracter','Cadena','Nada'
  ])

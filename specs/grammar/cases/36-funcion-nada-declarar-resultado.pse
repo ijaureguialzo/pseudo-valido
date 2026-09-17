@@ -1,0 +1,6 @@
+Funcion imprimir() -> Nada
+  Declarar resultado Como Entero
+FinFuncion
+Algoritmo P
+  Escribir 1
+FinAlgoritmo

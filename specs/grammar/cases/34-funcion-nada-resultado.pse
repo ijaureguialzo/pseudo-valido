@@ -1,0 +1,7 @@
+Funcion imprimir() -> Nada
+  Escribir "Hola"
+  resultado = 1
+FinFuncion
+Algoritmo P
+  Escribir 1
+FinAlgoritmo

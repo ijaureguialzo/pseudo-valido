@@ -65,6 +65,7 @@ export const ERRORS: Record<string, ErrorDef> = {
     'M-023': { descripcion: 'Literal Logico en contexto numérico', severity: 'error' },
     'M-024': { descripcion: "Cambio de Para con expresión no-numérica", severity: 'error' },
     'M-025': { descripcion: 'Función declarada dos veces (nombre ya usado)', severity: 'error' },
+    'M-026': { descripcion: "'resultado' usado o asignado en una función que no devuelve valor ('-> Nada')", severity: 'error' },
 }
 
 export function getErrorDef(code: string): ErrorDef | null {

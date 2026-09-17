@@ -114,7 +114,7 @@ function expectIdent(ctx: Ctx, msg: string): string {
 }
 function expectTipo(ctx: Ctx): string {
    const t = curr(ctx)
-   const tipos = ['Entero', 'Real', 'Logico', 'Caracter', 'Cadena']
+   const tipos = ['Entero', 'Real', 'Logico', 'Caracter', 'Cadena', 'Nada']
    if (t.tipo === 'PALABRA_CLAVE' && tipos.includes(t.texto)) return advance(ctx).texto
    ctx.errores.push(err('M-005', `Tipo de dato no válido: '${t.texto || 'EOF'}'`, t.line, t.column))
    if (t.tipo !== 'EOF') ctx.pos++

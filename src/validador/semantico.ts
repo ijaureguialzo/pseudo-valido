@@ -32,8 +32,9 @@ function mapTipo(tipo: string): Tipo {
      case 'Logico':   return Tipo.Logico
      case 'Caracter': return Tipo.Caracter
      case 'Cadena':   return Tipo.Cadena
+     case 'Nada':     return Tipo.Nada
      default: return Tipo.Desconocido
-       }
+        }
 }
 
 function copiar(src: Alcance, dst: Alcance): void {
@@ -78,6 +79,14 @@ function estaDeclarada(alc: Alcance, fAlc: Alcance, nom: string): boolean {
 
 function estaInicializada(alc: Alcance, fAlc: Alcance, nom: string): boolean {
   return nom === 'resultado' || alc.inicializadas.has(nom) || fAlc.inicializadas.has(nom)
+}
+
+// ¿La función en la que estamos analizando declara `-> Nada`? En ese caso no
+// puede usar `resultado` ni declararlo: su aparición es M-026.
+function funcionRetornaNada(alc: Alcance, funcionActual: string | undefined): boolean {
+  if (!funcionActual) return false
+  const def = alc.funciones.get(funcionActual)
+  return !!def && mapTipo(def.tipoRetorno) === Tipo.Nada
 }
 
 // Tipo declarado del destino de una asignación/lectura. 'resultado' hereda el
@@ -134,23 +143,38 @@ function analizarSentencia(
       ): void {
   switch (s.t) {
     case 'declaracion': {
+      // M-026: en una función `-> Nada` no existe `resultado`; declararla es un
+      // error y, al ser la aparición que se pide detectar, no se recae en M-002.
+      if (s.nombre === 'resultado' && funcionRetornaNada(alc, funcionActual)) {
+        marcar(errores, ya, 'M-026', 'M-026:' + s.tok.line,
+               s.tok.line, s.tok.column,
+                 "'resultado' no existe en una función que no devuelve valor ('-> Nada')")
+        break
+        }
       if (fAlc.variables.has(s.nombre)) {
-         marcar(errores, ya, 'M-002', 'M-002:' + s.tok.line,
-                s.tok.line, s.tok.column, `Variable '${s.nombre}' ya está declarada`)
-               }
-       fAlc.variables.set(s.nombre, s.tipo)
-       break
+        marcar(errores, ya, 'M-002', 'M-002:' + s.tok.line,
+               s.tok.line, s.tok.column, `Variable '${s.nombre}' ya está declarada`)
+              }
+      fAlc.variables.set(s.nombre, s.tipo)
+      break
         }
     case 'asignacion': {
-      if (!estaDeclarada(alc, fAlc, s.nombre)) {
-         marcar(errores, ya, 'M-001', 'M-001:' + s.nombre,
-                s.tok.line, s.tok.column, `Variable '${s.nombre}' no declarada`)
-        } else {
-         marcarAsignacion(s, fAlc, alc, errores, ya)
+      // M-026: en una función `-> Nada` no puede asignarse a `resultado`.
+      if (s.nombre === 'resultado' && funcionRetornaNada(alc, funcionActual)) {
+        marcar(errores, ya, 'M-026', 'M-026:' + s.tok.line,
+               s.tok.line, s.tok.column,
+                  "'resultado' no existe en una función que no devuelve valor ('-> Nada')")
+        break
          }
+      if (!estaDeclarada(alc, fAlc, s.nombre)) {
+        marcar(errores, ya, 'M-001', 'M-001:' + s.nombre,
+               s.tok.line, s.tok.column, `Variable '${s.nombre}' no declarada`)
+         } else {
+         marcarAsignacion(s, fAlc, alc, errores, ya)
+          }
       revisarExpr(s.valor, fAlc, alc, errores, ya, funcionActual)
       break
-          }
+           }
     case 'leer': {
       if (!estaDeclarada(alc, fAlc, s.nombre)) {
          marcar(errores, ya, 'M-004', 'M-004:' + s.nombre,
@@ -227,15 +251,22 @@ function revisarExpr(
   switch (e.t) {
     case 'ident': {
       const nom = e.nombre
-      if (!estaDeclarada(alc, fAlc, nom)) {
-         marcar(errores, ya, 'M-001', 'M-001:' + nom,
-                e.tok.line, e.tok.column, `Variable '${nom}' no declarada`) }
-       if (nom !== 'resultado' && estaDeclarada(alc, fAlc, nom)
-           && !estaInicializada(alc, fAlc, nom)) {
-          marcar(errores, ya, 'M-003', 'M-003:' + nom,
-                e.tok.line, e.tok.column, `Variable '${nom}' usada sin inicializar`) }
-       break
+       // M-026: `resultado` usado en expresión dentro de una función `-> Nada`.
+      if (nom === 'resultado' && funcionRetornaNada(alc, funcionActual)) {
+        marcar(errores, ya, 'M-026', 'M-026:' + e.tok.line,
+               e.tok.line, e.tok.column,
+                   "'resultado' no existe en una función que no devuelve valor ('-> Nada')")
+        break
           }
+      if (!estaDeclarada(alc, fAlc, nom)) {
+        marcar(errores, ya, 'M-001', 'M-001:' + nom,
+               e.tok.line, e.tok.column, `Variable '${nom}' no declarada`) }
+       if (nom !== 'resultado' && estaDeclarada(alc, fAlc, nom)
+            && !estaInicializada(alc, fAlc, nom)) {
+          marcar(errores, ya, 'M-003', 'M-003:' + nom,
+               e.tok.line, e.tok.column, `Variable '${nom}' usada sin inicializar`) }
+      break
+           }
     case 'llamada': {
       const def = alc.funciones.get(e.nombre)
       if (!def) {

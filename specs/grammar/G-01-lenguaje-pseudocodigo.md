@@ -33,7 +33,7 @@ Repetitivas:       Mientras    FinMientras
                   Repetir
                   Para        Cambio
 Literals booleanos: verdadero   falso
-Tipos de datos:    Entero   Real   Logico   Caracter   Cadena
+Tipos de datos:    Entero   Real   Logico   Caracter   Cadena   Nada
 ```
 
 ### 2.2 Símbolos / operadores
@@ -75,7 +75,7 @@ BloqueFuncion    ::= Declaracion* Sentencia*                   ; cuerpo
 
 Declaracion      ::= "Declarar" Identificador "Como" Tipo
 
-Tipo             ::= "Entero" | "Real" | "Logico" | "Caracter" | "Cadena"
+Tipo              ::= "Entero" | "Real" | "Logico" | "Caracter" | "Cadena" | "Nada"
 
 Sentencia        ::= "Si" Expresion "Entonces" Bloque ("SiNo" Bloque)? "FinSi"
                    | "Segun" Expresion "Hacer" Caso* ["DeOtroModo" ":" Sentencia*] "FinSegun"
@@ -197,6 +197,10 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-023** Literal `Logico` en contexto numérico.
 - **M-024** `Cambio` de `Para` con expresión no-numérica.
 - **M-025** Función declarada dos veces con el mismo nombre (ver `D-redef`).
+- **M-026** `resultado` aparece (asignado, usado en expresión o **declarado**
+  con `Declarar resultado Como …`) en el cuerpo de una función cuyo tipo de
+  retorno es `Nada`: la variable que recoge el valor devuelto no existe, por lo
+   que su aparición es un error (ver **D-Nada**).
 
 ### 4.4 Tipos
 - `Entero`/`Real` se subsumen en "numérico"; `+ - * / %` exigen numérico; `%` exige `Entero` en ambos lados.
@@ -272,10 +276,13 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `27-llamada-tipo.pse`   | `M-009` (tipo de argumento distinto al parámetro) |
 | `28-llamada-num-args.pse`|`M-013` (nº de argumentos distinto) |
 | `29-funcion-despues.pse` | `correcto=true` (la función va después del Algoritmo) |
-| `30-dos-algoritmos.pse`   | `S-322` (segundo `Algoritmo` no permitido) |
-| `31-llamada-real.pse`      | `M-009` (arg. `Real` no encaja en parámetro `Entero`, P1) |
-| `32-param-visibles.pse`    | `M-001` ×2 (`a`/`b` de `sumar` no visibles en el principal, P2) |
-| `33-funcion-redefin.pse`   | `M-025` (función `sumar` declarada dos veces, P3) |
+| `30-dos-algoritmos.pse` | `S-322` (segundo `Algoritmo` no permitido) |
+| `31-llamada-real.pse`    | `M-009` (arg. `Real` no encaja en parámetro `Entero`) |
+| `32-param-visibles.pse`  | `M-001` ×2 (`a`/`b` de `sumar` no visibles en el principal) |
+| `33-funcion-redefin.pse` | `M-025` (función `sumar` declarada dos veces) |
+| `34-funcion-nada-resultado.pse` | `M-026` (`resultado = 1` en función `-> Nada`) |
+| `35-funcion-nada-ok.pse` | `correcto=true` (función `-> Nada` sin `resultado`) |
+| `36-funcion-nada-declarar-resultado.pse` | `M-026` (`Declarar resultado Como …` en función `-> Nada`) |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -286,10 +293,9 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 - **D5.** Funciones → **sí** soportadas: `Funcion f(Declarar p Como T) -> T … FinFuncion`
   (los parámetros se declaran con la misma palabra clave `Declarar`, sin una
   palabra reservada distinta).
-- **D6.** Tipos: `Entero`, `Real`, `Logico`, `Caracter`, `Cadena`.
+- **D6.** Tipos: `Entero`, `Real`, `Logico`, `Caracter`, `Cadena`, `Nada`.
 - **D7.** Coerción implícita en `+` entre `Cadena` y numérico → **no** (error M-019/020).
-- **D8.** `Le
-er` admite un único identificador.
+- **D8.** `Leer` admite un único identificador.
 - **D9.** El validador es un **módulo puro** (sin I/O), testeable en Node.
 - **D10.** La UI persiste archivos en **localStorage** del navegador.
 - **D11.** La función puede quedar antes **o** después del `Algoritmo`; solo se
@@ -299,11 +305,18 @@ er` admite un único identificador.
   la asignación (`M-016`): un parámetro `Entero` no admite `Real` ensanchado.
   Los parámetros **no se exponen** fuera de su propia función (`D-alcance`; su
   ausencia en el principal es `M-001`), y cada función se declara **una sola
-  vez** (`D-redef`; una redefinición es `M-025`).
+  vez** (`D-redef`; una redefinición es `M-025`). Una función puede declarar
+  `-> Nada` (función sin valor de retorno); en ese cuerpo `resultado` es
+   **prohibido** (su aparición es `M-026`; ver **D-Nada**).
+- **D-Nada.** `Nada` es el tipo de retorno de una función que no aporta valor
+  a su llamador. En la gramática, `Funcion f (…) -> Nada … FinFuncion`. En el
+  cuerpo **no existe** la variable especial `resultado` (ya sea asignada en
+   expresión, usada como operando de `Escribir`, o declarada con `Declarar
+   resultado Como …`); su aparición es `M-026`.
 
 ## 8. Criterio de aceptación global
 
-1. La suite de `vitest` pasa en verde para los 33 casos golden (§6).
+1. La suite de `vitest` pasa en verde para los 36 casos golden (§6).
 2. Todo código nuevo tiene al menos una prueba que lo justifica (ratio ≥ 90% línea en `src/validador/`).
 3. El editor muestra los diagnósticos con línea/columna en el gutter y en un panel.
 4. Los archivos persisten en `localStorage`; al recargar, la lista y el activo se restauran.

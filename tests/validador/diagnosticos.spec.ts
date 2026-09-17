@@ -35,12 +35,12 @@ describe('diagnosticos', () => {
          expect(keys.length).toBe(22)    
     })
 
-   it('tiene 25 errores semánticos (M-001 a M-025)', () => {
+   it('tiene 26 errores semánticos (M-001 a M-026)', () => {
          const keys = Object.keys(diag.ERRORS)
               .filter(k => k.startsWith('M-'))
               .sort()
-         expect(keys.length).toBe(25)
-    })
+         expect(keys.length).toBe(26)
+     })
 
    it('tiene al menos una entrada warning', () => { 
       const entries = Object.values(diag.ERRORS)  
