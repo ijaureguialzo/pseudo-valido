@@ -86,6 +86,16 @@ export interface NodoAsignacion {
    tok: Token
 }
 
+// Una llamada a función usada como sentencia (por sus efectos), no como valor:
+// `menu()`. Es la forma natural de invocar una función `-> Nada` (D-Nada). A
+// nivel de AST es exactamente una expresión 'llamada' (mismo nodo).
+export interface NodoLlamada {
+   t: 'llamada'
+   nombre: string
+   args: Expr[]
+   tok: Token
+}
+
 export interface NodoSi {
    t: 'si'
    condicion: Expr
@@ -138,6 +148,7 @@ export type Sentencia =
    | NodoLeer
    | NodoEscribir
    | NodoAsignacion
+   | NodoLlamada
    | NodoSi
    | NodoMientras
    | NodoRepetir

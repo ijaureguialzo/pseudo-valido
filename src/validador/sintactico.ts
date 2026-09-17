@@ -178,12 +178,15 @@ function canStartSentencia(ctx: Ctx): boolean {
       'Si', 'Mientras', 'Repetir', 'Segun', 'Para', 'Declarar', 'Leer', 'Escribir'
    ])
    if (t.tipo === 'PALABRA_CLAVE' && starts.has(t.texto)) return true
-   // asignación: identificador seguido de '='
+    // asignación: identificador seguido de '='; o llamada a función usada como
+    // sentencia (por sus efectos): identificador seguido de '('. La llamada
+    // solitaria es la forma natural de invocar una función `-> Nada` (D-Nada).
    if (t.tipo === 'IDENT') {
       const n = peek(ctx)
-      return n.tipo === 'SIMBOLO' && n.texto === '='
-   }
-   // cualquier otro token (número suelto, cierre, etc.) no inicia sentencia.
+      if (n.tipo !== 'SIMBOLO') return false
+      return n.texto === '=' || n.texto === '('
+     }
+    // cualquier otro token (número suelto, cierre, etc.) no inicia sentencia.
    return false
 }
 
@@ -235,22 +238,28 @@ function parseSentencia(ctx: Ctx): Sentencia | null {
        advance(ctx)
        return null
      default:
-       if (t.tipo === 'IDENT') {
-         const nombre = t.texto
-         advance(ctx) // consumir el identificador
-         if (isSym(ctx, '=')) {
-           const as = advance(ctx)
-           const valor = parseExpr(ctx)
-           return { t: 'asignacion', nombre, valor, tok: as }
+      if (t.tipo === 'IDENT') {
+        const nombre = t.texto
+        const tokId = advance(ctx) // consumir el identificador
+        if (isSym(ctx, '=')) {
+          const as = advance(ctx)
+          const valor = parseExpr(ctx)
+          return { t: 'asignacion', nombre, valor, tok: as }
           }
-         ctx.errores.push(err('S-019', `Token inesperado '${nombre}'`, t.line, t.column))
-         return null
+        if (isSym(ctx, '(')) {
+         // Llamada usada como sentencia por sus efectos, no como valor. Es la
+         // forma natural de invocar una función `-> Nada` (D-Nada): `menu()`.
+         // Como ya confirmamos el '(', parseLlamada devuelve el nodo 'llamada'.
+         return parseLlamada(ctx, nombre, tokId) as Sentencia
+         }
+        ctx.errores.push(err('S-019', `Token inesperado '${nombre}'`, t.line, t.column))
+        return null
         }
-       ctx.errores.push(err('S-019', `Token inesperado '${t.texto || 'EOF'}'`, t.line, t.column))
-       advance(ctx)
-       return null
-   }
-}
+      ctx.errores.push(err('S-019', `Token inesperado '${t.texto || 'EOF'}'`, t.line, t.column))
+      advance(ctx)
+      return null
+     }
+     }
 
 function parseSi(ctx: Ctx): NodoSi {
    const inicio = advance(ctx) // Si
@@ -468,26 +477,34 @@ function parsePrimario(ctx: Ctx): Expr {
    return { t: 'literalBool', valor: t.texto === 'verdadero', tok: t }
   }
   if (t.tipo === 'IDENT') {
-   advance(ctx)
-   if (isSym(ctx, '(')) {
-    const abrir = advance(ctx)
-    const args: Expr[] = []
-    if (curr(ctx).texto !== ')') {
-     args.push(parseExpr(ctx))
-     while (isSym(ctx, ',')) {
-      advance(ctx)
-      args.push(parseExpr(ctx))
-     }
-    }
-    expectSym(ctx, ')', 'Paréntesis desparejado en llamada')
-    return { t: 'llamada', nombre: t.texto, args, tok: abrir }
-   }
-   return { t: 'ident', nombre: t.texto, tok: t }
+    const tokId = advance(ctx) // consumir el identificador
+    return parseLlamada(ctx, tokId.texto, tokId)
   }
 
   ctx.errores.push(err('S-017', `Operando inesperado: '${t.texto || 'EOF'}'`, t.line, t.column))
   advance(ctx)
   return { t: 'literalBool', valor: false, tok: t }
+}
+
+// Tras consumir el identificador de una llamada: si viene '(' se parsean los
+// argumentos con los paréntesis y se devuelve el nodo de llamada; si no, es un
+// mero identificador. Compártese entre la llamada en expresión (parsePrimario)
+// y la llamada usada como sentencia por sus efectos (parseSentencia).
+function parseLlamada(ctx: Ctx, nombre: string, tokId: Token): Expr {
+  if (isSym(ctx, '(')) {
+    const abrir = advance(ctx)
+    const args: Expr[] = []
+    if (curr(ctx).texto !== ')') {
+      args.push(parseExpr(ctx))
+      while (isSym(ctx, ',')) {
+        advance(ctx)
+        args.push(parseExpr(ctx))
+      }
+    }
+    expectSym(ctx, ')', 'Paréntesis desparejado en llamada')
+    return { t: 'llamada', nombre, args, tok: abrir }
+  }
+  return { t: 'ident', nombre, tok: tokId }
 }
 
 function err(code: string, msg: string, line: number, column: number, severity: 'error' | 'warning' = 'error'): Diagnostico {

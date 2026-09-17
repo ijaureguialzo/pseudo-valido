@@ -87,6 +87,7 @@ Sentencia        ::= "Si" Expresion "Entonces" Bloque ("SiNo" Bloque)? "FinSi"
                    | Leer
                    | Declaracion
                    | Asignacion
+                   | LlamadaFuncion                          ; llamada por sus efectos (típico de -> Nada)
 
 Caso             ::= Expresion ":" Sentencia*
 
@@ -283,6 +284,7 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `34-funcion-nada-resultado.pse` | `M-026` (`resultado = 1` en función `-> Nada`) |
 | `35-funcion-nada-ok.pse` | `correcto=true` (función `-> Nada` sin `resultado`) |
 | `36-funcion-nada-declarar-resultado.pse` | `M-026` (`Declarar resultado Como …` en función `-> Nada`) |
+| `37-funcion-nada-llamada.pse` | `correcto=true` (llamada solitaria `menu()` a función `-> Nada`, función tras el Algoritmo) |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -312,11 +314,13 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
   a su llamador. En la gramática, `Funcion f (…) -> Nada … FinFuncion`. En el
   cuerpo **no existe** la variable especial `resultado` (ya sea asignada en
    expresión, usada como operando de `Escribir`, o declarada con `Declarar
-   resultado Como …`); su aparición es `M-026`.
+   resultado Como …`); su aparición es `M-026`. La llamada a tal función se hace
+   **como sentencia por sus efectos** —`menu()`—, no recogiendo valor
+   (`LlamadaFuncion` como `Sentencia`).
 
 ## 8. Criterio de aceptación global
 
-1. La suite de `vitest` pasa en verde para los 36 casos golden (§6).
+1. La suite de `vitest` pasa en verde para los 37 casos golden (§6).
 2. Todo código nuevo tiene al menos una prueba que lo justifica (ratio ≥ 90% línea en `src/validador/`).
 3. El editor muestra los diagnósticos con línea/columna en el gutter y en un panel.
 4. Los archivos persisten en `localStorage`; al recargar, la lista y el activo se restauran.

@@ -1,0 +1,7 @@
+Algoritmo Prueba
+  menu()
+FinAlgoritmo
+
+Funcion menu() -> Nada
+  Escribir "Hola"
+FinFuncion

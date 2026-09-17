@@ -187,7 +187,14 @@ function analizarSentencia(
     case 'escribir': {
       for (const e of s.args) revisarExpr(e, fAlc, alc, errores, ya, funcionActual)
       break
-        }
+      }
+    case 'llamada': {
+      // Llamada usada como sentencia por sus efectos (`menu()`), típica de una
+      // función `-> Nada` (D-Nada). Su validación (M-012 nº args M-013/M-009,
+      // M-015) es la misma que en expresión: el nodo es idéntico a una 'llamada'.
+      revisarExpr(s, fAlc, alc, errores, ya, funcionActual)
+      break
+      }
     case 'si': {
       revisarExpr(s.condicion, fAlc, alc, errores, ya, funcionActual)
       { const sub = nuevoAlcance(); copiar(fAlc, sub)
