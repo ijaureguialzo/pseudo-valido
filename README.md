@@ -1,3 +1,3 @@
-# pseudo-valido
+# PseudoVálido
 
 Validador online de pseudocódigo.
