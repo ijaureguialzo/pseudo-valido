@@ -175,7 +175,11 @@ impide que el programa sea "correcto"; `warning` no.
 - **M-006** Tipo inválido en el parámetro de una función (`Declarar … Como`).
 - **M-007** Tipo de retorno no coincide con el tipo de `resultado`.
 - **M-008** `resultado` no asignado en alguna trayectoria (no-asignación).
-- **M-009** Parámetro de función con tipo distinto al de la llamada.
+- **M-009** Parámetro de función con tipo distinto al de la llamada. Un argumento
+  numérico (`Entero` o `Real`) es **compatible** con cualquier parámetro numérico
+  (ambos sentidos: `Entero` y `Real` se ensanchan), a diferencia de la asignación
+  `M-016`, que exige el ensanche en un único sentido. Por tanto `sumar(5, 5.7)`
+  encaja en `sumar(Declarar a Como Entero, …)` sin error.
 - **M-010** Tipo de expresión incoherente con el operando esperado (p.ej. `&&` no-`Logico`).
 - **M-011** Variable de control de `Para` usada fuera del ciclo.
 - **M-012** Llamada a función no definida.
@@ -203,6 +207,16 @@ impide que el programa sea "correcto"; `warning` no.
   `Entero`: su inicial y su `Cambio` deben ser numéricos, o se dispara M-016 / M-024).
   No hay conversión implícita ni coerción (ver **D7**): `x = 7` con `x: Cadena` es M-016.
 - `Desconocido` (tipo no inferible) se tolera: no produce M-016.
+- **Alcance de parámetros (D-alcance):** los parámetros de **toda** función
+  declarada en el programa (incluida su versión redefinida) quedan registrados
+  como identificadores del programa. No se produce M-001 por usar un parámetro
+  (p. ej. `sumar(a, b)`) en el programa principal aunque `a`/`b` no se declaren
+   allí. Es un alcance global del programa, no un ámbito local de la función.
+- **Redefinición de funciones (D-redef):** una función puede declararse **varias
+  veces con el mismo nombre** sin error de duplicada (no se aplica M-002 a
+  funciones). El registro es de tipo `Map` (última definición gana); solo se
+  admite un único `Algoritmo` (`S-322`), pero 0..n funciones en cualquier orden,
+  con nombres repetidos.
 
 ## 5. Formato de diagnóstico
 
@@ -257,7 +271,10 @@ la salida del validador contra `expected.diagnosticos.json` (orden por
 | `27-llamada-tipo.pse`   | `M-009` (tipo de argumento distinto al parámetro) |
 | `28-llamada-num-args.pse`|`M-013` (nº de argumentos distinto) |
 | `29-funcion-despues.pse` | `correcto=true` (la función va después del Algoritmo) |
-| `30-dos-algoritmos.pse`  | `S-322` (segundo `Algoritmo` no permitido) |
+| `30-dos-algoritmos.pse`   | `S-322` (segundo `Algoritmo` no permitido) |
+| `31-llamada-real-ok.pse`  | `correcto=true` (arg. `Real` en parámetro `Entero`, numérico↔numérico es compatible — P1) |
+| `32-param-visibles-ok.pse`| `correcto=true` (parámetros visibles en el principal; `sumar(a, b)` sin M-001 — P2) |
+| `33-funcion-redefin-ok.pse`| `correcto=true` (la función puede redefinirse con el mismo nombre — P3) |
 
 ## 7. Decisiones de diseño (fijadas)
 
@@ -277,11 +294,13 @@ er` admite un único identificador.
 - **D11.** La función puede quedar antes **o** después del `Algoritmo`; solo se
   admite **un** `Algoritmo` (`S-322` en caso contrario), y hay 0..n funciones en
   cualquier orden. En una llamada se validan nº de argumentos (`M-013`) y tipo por
-  argumento frente al parámetro (`M-009`); numérico↔numérico es compatible.
+  argumento frente al parámetro (`M-009`); numérico↔numérico es compatible. Los
+  parámetros de una función quedan **visibles en todo el programa** (`D-alcance`)
+  y una función **puede redefinirse** con el mismo nombre sin error (`D-redef`).
 
 ## 8. Criterio de aceptación global
 
-1. La suite de `vitest` pasa en verde para los 30 casos golden (§6).
+1. La suite de `vitest` pasa en verde para los 33 casos golden (§6).
 2. Todo código nuevo tiene al menos una prueba que lo justifica (ratio ≥ 90% línea en `src/validador/`).
 3. El editor muestra los diagnósticos con línea/columna en el gutter y en un panel.
 4. Los archivos persisten en `localStorage`; al recargar, la lista y el activo se restauran.
