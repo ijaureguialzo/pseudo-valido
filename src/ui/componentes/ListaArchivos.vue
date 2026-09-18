@@ -22,6 +22,12 @@ function alRenombrar(nombre: string): void {
   if (n && n !== nombre) emit('renombrar', nombre, n)
   renomearNombre.value = ''
 }
+
+function alBorrar(nombre: string): void {
+  if (window.confirm(`¿Está seguro? Se borrará «${nombre}».`)) {
+    emit('borrar', nombre)
+  }
+}
 </script>
 
 <template>
@@ -57,7 +63,7 @@ function alRenombrar(nombre: string): void {
         <button
           class="btn-icono"
           data-testid="btn-borrar"
-          @click.stop="emit('borrar', f.nombre)"
+           @click.stop="alBorrar(f.nombre)"
         >
           <i class="bi bi-trash btn-borrar"></i>
         </button>
