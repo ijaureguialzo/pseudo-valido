@@ -7,6 +7,7 @@ import BarraEstado from './ui/componentes/BarraEstado.vue'
 import { useArchivos, type Archivo } from './ui/composables/useArchivos'
 import { useValidacion } from './ui/composables/useValidacion'
 import { useTema } from './ui/composables/useTema'
+import { formatear } from './ui/composables/formateo'
 import { validar } from './validador'
 
 const archivos = useArchivos()
@@ -63,6 +64,17 @@ function onBorrar(nombre: string): void {
 function onEditarContenido(nuevo: string): void {
   archivos.actualizarContenido(nuevo)
 }
+
+// Botón "⚡ Formato" de la barra de estado: da formato al archivo abierto sin
+// tocar su lógica, solo reorganiza la sangría para mejorar la legibilidad.
+function onFormatear(): void {
+  const activo = archivos.activo.value
+  if (!activo) return
+  const nuevoContenido = formatear(activo.contenido)
+  if (nuevoContenido !== activo.contenido) {
+    archivos.actualizarContenido(nuevoContenido)
+     }
+}
 </script>
 
 <template>
@@ -100,9 +112,10 @@ function onEditarContenido(nuevo: string): void {
     </aside>
     <section class="panel-der">
       <BarraEstado
-        class="barra-estado"
+       class="barra-estado"
         :diagnosticos="diagnosticos"
         :nombre-activo="archivos.activo.value?.nombre ?? null"
+        @formatear="onFormatear"
       />
       <EditorCodesmio
         v-if="archivos.activo.value"

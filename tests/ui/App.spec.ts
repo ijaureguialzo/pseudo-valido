@@ -29,5 +29,30 @@ describe('App.vue', () => {
      const c = mount(App)
      expect(c.findComponent(PanelDiagnosticos).exists()).toBe(true)
      expect(c.findComponent(BarraEstado).exists()).toBe(true)
+      })
+
+   it('el botón "⚡ Formato" reformatea el contenido del editor', async () => {
+     const c = mount(App)
+     const ta = c.find('textarea')
+     const el = ta.element as HTMLTextAreaElement
+      // Contenido sin indentar: una función cuyo cuerpo y un bucle no sangran.
+     const desordenado =
+        'Funcion f() -> Entero\n' +
+        '  resultado = 1\n' +
+        'FinFuncion\n' +
+        'Algoritmo P\n' +
+        'Para i = 1 Mientras i < 3 Hacer\n' +
+        'Escribir i\n' +
+        'FinPara\n' +
+        'FinAlgoritmo\n'
+     el.value = desordenado
+     await ta.trigger('input')
+     await c.get('[data-testid="btn-formato"]').trigger('click')
+       await c.vm.$nextTick()
+     const valor = (c.find('textarea').element as HTMLTextAreaElement).value
+      // El cuerpo del Para ahora sangra 2 espacios.
+     expect(valor).toContain('    Escribir i\n')
+      // La función y su cierre se mantienen.
+     expect(valor).toContain('FinFuncion\n')
+        })
      })
-})
