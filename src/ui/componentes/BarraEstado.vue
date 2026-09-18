@@ -43,6 +43,11 @@ const hayArchivo = computed(() => props.nombreActivo !== null)
     >Sin archivo</span>
     <!-- Grupo derecho: botón discreto de formato junto al mensaje de estado. -->
     <div class="barra-acciones">
+     <span
+      class="estado"
+       :class="estadoClase"
+      data-testid="estado"
+     >{{ estado }}</span>
      <button
       type="button"
       class="btn-formato"
@@ -52,11 +57,6 @@ const hayArchivo = computed(() => props.nombreActivo !== null)
       aria-label="Dar formato automático al archivo"
        @click="emit('formatear')"
      >⚡ Formato</button>
-     <span
-      class="estado"
-       :class="estadoClase"
-      data-testid="estado"
-     >{{ estado }}</span>
      </div>
     </footer>
     </template>
@@ -96,6 +96,7 @@ const hayArchivo = computed(() => props.nombreActivo !== null)
 /* Botón discreto: hereda el tamaño de la barra y resalta al pasar el ratón. */
 .btn-formato {
   font: inherit;
+  margin: auto 0;
   font-size: 0.8rem;
   line-height: 1;
   color: var(--pv-text-muted);
