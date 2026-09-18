@@ -48,60 +48,100 @@ describe('EditorCodesmio', () => {
       expect(ult).toBe('  ') // 2 espacios añadidos al inicio de la única línea
         })
 
-   it('Tab sangra un bloque seleccionado entero', async () => {
-     const texto = 'a\nb\nc\n'
+   it('Tab sangra líneas completas seleccionadas', async () => {
+       // Seleccionar las líneas 'b' y 'c' (incluyendo sus saltos) las sangra
+       // ambas; la línea 'a' y las siguientes no tocan.
+     const texto = 'a\nb\nc\nd\ne\n'
      const c = mount(EditorCodesmio, { props: { valor: texto } })
      const ta = c.find('textarea')
      const el = ta.element as HTMLTextAreaElement
-         // Selecciona de la línea 'a' hasta la línea 'b' (incluye el salto).
-     el.selectionStart = 1
-     el.selectionEnd = 3
-     await ta.trigger('keydown', { key: 'Tab' })
-     const ult = c.emitted('actualizar')![c.emitted('actualizar')!.length - 1][0]
-      expect(ult).toBe('  a\n  b\nc\n')   // sangría 2 espacios para las líneas 0-1
-         })
+        // 'b' y 'c' con sus saltos: desde tras 'a\n' (pos 2) hasta tras 'c\n' (pos 6).
+     el.selectionStart = 2
+     el.selectionEnd = 6
+      await ta.trigger('keydown', { key: 'Tab' })
+      const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+       expect(nuevo).toBe('a\n  b\n  c\nd\ne\n')
+       expect(el.selectionStart).toBe(4)
+       expect(el.selectionEnd).toBe(10)
+             // Solo 'b' y 'c' ganan 2 espacios de sangría; 'a' y 'd' no se tocan.
+       expect(nuevo.split('\n').filter((l) => l.startsWith('  '))).toEqual(['  b', '  c'])
+              })
 
-   it('Shift+Tab desangra un bloque (retira 2 espacios de cada línea)', async () => {
-     const texto = 'a\n  b\n  c\n'     // 2 espacios de sangría en b y c
+    it('Cursor al inicio de una línea: Tab sangra esa línea (no inserta una nueva)', async () => {
+       // Regresión del síntoma 2: con el cursor pegado al inicio de la línea
+       // (posición justo tras el salto anterior) y sin selección, pulsar Tab
+       // debe sangrar LA línea, no intercalar una línea vacía delante de ella.
+     const texto = 'abc\ndef'
      const c = mount(EditorCodesmio, { props: { valor: texto } })
      const ta = c.find('textarea')
      const el = ta.element as HTMLTextAreaElement
-         // Se selecciona desde después de 'a' hasta el final de la línea 'c'.
-       el.selectionStart = 1
+        // El cursor tras el '\n' de 'abc' (posición 4), justo al inicio de 'def'.
+     el.selectionStart = 4
+     el.selectionEnd = 4
+      await ta.trigger('keydown', { key: 'Tab' })
+     const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+      expect(nuevo).toBe('abc\n  def')          // sangra 'def'; no hay línea nueva
+      expect(nuevo.split('\n').length).toBe(2)  // siguen siendo 2 líneas
+      expect(el.selectionStart).toBe(6)         // el cursor se mueve tras la sangría
+      expect(el.selectionEnd).toBe(6)
+          })
+
+    it('Cursor al inicio de una línea: Shift+Tab desangra esa línea', async () => {
+     const texto = 'abc\n  def'
+     const c = mount(EditorCodesmio, { props: { valor: texto } })
+     const ta = c.find('textarea')
+     const el = ta.element as HTMLTextAreaElement
+     el.selectionStart = 4
+     el.selectionEnd = 4
+      await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
+     const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+      expect(nuevo).toBe('abc\ndef')
+      expect(nuevo.split('\n').length).toBe(2) // no desaparece ninguna línea
+      expect(el.selectionStart).toBe(4)
+      expect(el.selectionEnd).toBe(4)
+          })
+
+    it('Shift+Tab desangra líneas completas seleccionadas', async () => {
+     const texto = 'a\n  b\n  c\nd\ne\n'
+     const c = mount(EditorCodesmio, { props: { valor: texto } })
+     const ta = c.find('textarea')
+     const el = ta.element as HTMLTextAreaElement
+       // 'b' y 'c' con sus saltos (2 espacios de sangría): tras 'a\n' (pos 2) a tras 'c\n' (pos 8).
+     el.selectionStart = 2
      el.selectionEnd = 8
       await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
-     const ult = c.emitted('actualizar')![c.emitted('actualizar')!.length - 1][0]
-     expect(ult).toBe('a\nb\nc\n')
-    })
+     const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+      expect(nuevo).toBe('a\nb\nc\nd\ne\n')
+      expect(el.selectionStart).toBe(2)
+      expect(el.selectionEnd).toBe(4)
+          })
 
-   // Regresión: Tab no debe EXTENDER la selección hasta el final del archivo.
-   // Se elige un bloque en el MEDIO de un documento; tras indentar, la selección
-   // debe conservar su contenido y quedarse dentro de la zona, no correr al EOF.
-  it('Tab mantiene la selección (no la extiende hasta el final del archivo)', async () => {
-    const texto = 'una\n  dos\n  tres\n  cuatro\n  cinco\n'
-    const c = mount(EditorCodesmio, { props: { valor: texto } })
-    const ta = c.find('textarea')
-    const el = ta.element as HTMLTextAreaElement
-        // Selecciona las líneas 'dos' y 'tres' (no las finales).
-    el.selectionStart = 5
-    el.selectionEnd = 12
-    await ta.trigger('keydown', { key: 'Tab' })
-       // La nueva selección sigue siendo un rango reducido, NO hasta el final.
-    expect(el.selectionEnd).toBeLessThanOrEqual(18)
+    it('Tab no extiende la selección hasta el final del archivo', async () => {
+     const texto = 'una\n  dos\n  tres\n  cuatro\n  cinco\n'
+     const c = mount(EditorCodesmio, { props: { valor: texto } })
+     const ta = c.find('textarea')
+     const el = ta.element as HTMLTextAreaElement
+             // Selecciona la línea 'dos' (completa, con su salto): tras 'una\n' (pos 4) hasta tras 'dos\n' (pos 8).
+     el.selectionStart = 4
+     el.selectionEnd = 8
+     await ta.trigger('keydown', { key: 'Tab' })
+     const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+            // La selección no corre al final del archivo, y solo 'dos' gana sangría.
      expect(el.selectionEnd).toBeLessThan(texto.length)
-       // El contenido de la selección no cambia (se sangraron 2 líneas de 2 espacios).
-    expect(el.value.length).toBe(texto.length + 4)
-       })
+     expect(nuevo).toBe('una\n    dos\n  tres\n  cuatro\n  cinco\n')
+            })
 
-   it('Shift+Tab mantiene la selección (no la extiende hasta el final)', async () => {
-    const texto = 'una\n  dos\n  tres\n  cuatro\n'
-    const c = mount(EditorCodesmio, { props: { valor: texto } })
-    const ta = c.find('textarea')
-    const el = ta.element as HTMLTextAreaElement
-     el.selectionStart = 5
-     el.selectionEnd = 10
-    await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
-       expect(el.selectionEnd).toBeLessThanOrEqual(10)
-     expect(el.selectionEnd).toBeLessThan(texto.length + 5)
-       })
-})
+    it('Shift+Tab no extiende la selección hasta el final', async () => {
+     const texto = 'una\n  dos\n  tres\n  cuatro\n'
+     const c = mount(EditorCodesmio, { props: { valor: texto } })
+     const ta = c.find('textarea')
+     const el = ta.element as HTMLTextAreaElement
+       // 'dos' y 'tres' completos: tras 'una\n' (pos 4) hasta tras 'tres\n' (pos 8).
+     el.selectionStart = 4
+     el.selectionEnd = 8
+     await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
+     const nuevo = (c.emitted('actualizar') as string[][]).at(-1)![0]
+        expect(el.selectionEnd).toBeLessThan(nuevo.length)
+     expect(nuevo).toBe('una\ndos\n  tres\n  cuatro\n')
+            })
+     })
