@@ -52,14 +52,14 @@ function alRenombrar(nombre: string): void {
           data-testid="btn-renombrar"
           @click.stop="alRenombrar(f.nombre)"
         >
-          ren
+          <i class="bi bi-pencil"></i>
         </button>
         <button
           class="btn-icono"
           data-testid="btn-borrar"
           @click.stop="emit('borrar', f.nombre)"
         >
-          del
+          <i class="bi bi-trash btn-borrar"></i>
         </button>
       </li>
       <li
@@ -179,6 +179,10 @@ function alRenombrar(nombre: string): void {
 
 .btn-icono:hover {
   background: var(--pv-surface-secondary);
+}
+
+.btn-borrar {
+  color: var(--pv-danger);
 }
 
 @media (max-width: 768px) {

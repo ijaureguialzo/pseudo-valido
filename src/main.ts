@@ -6,6 +6,7 @@ import { useTema } from './ui/composables/useTema'
 // producción de tests porque happy-dom no procesa CSS.
 import '@picocss/pico/css/pico.min.css'
 import './estilo/tema.css'
+import 'bootstrap-icons/font/bootstrap-icons.min.css'
 
 // Aplica el tema (auto/claro/oscuro) al <html> antes de montar la app,
 // evitando parpadeo de colores (FOUC).
