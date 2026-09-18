@@ -57,6 +57,7 @@ function alBorrar(nombre: string): void {
           class="btn-icono"
           data-testid="btn-renombrar"
           @click.stop="alRenombrar(f.nombre)"
+          title="Renombrar"
         >
           <i class="bi bi-pencil"></i>
         </button>
@@ -64,6 +65,7 @@ function alBorrar(nombre: string): void {
           class="btn-icono"
           data-testid="btn-borrar"
            @click.stop="alBorrar(f.nombre)"
+          title="Borrar"
         >
           <i class="bi bi-trash btn-borrar"></i>
         </button>
