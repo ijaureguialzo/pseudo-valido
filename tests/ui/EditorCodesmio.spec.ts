@@ -62,15 +62,46 @@ describe('EditorCodesmio', () => {
          })
 
    it('Shift+Tab desangra un bloque (retira 2 espacios de cada línea)', async () => {
-     const texto = 'a\n  b\n  c\n'    // 2 espacios de sangría en b y c
+     const texto = 'a\n  b\n  c\n'     // 2 espacios de sangría en b y c
      const c = mount(EditorCodesmio, { props: { valor: texto } })
      const ta = c.find('textarea')
      const el = ta.element as HTMLTextAreaElement
-       // Selecciona desde después de 'a' hasta el final de la línea 'c'.
-     el.selectionStart = 1
+         // Se selecciona desde después de 'a' hasta el final de la línea 'c'.
+       el.selectionStart = 1
      el.selectionEnd = 8
       await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
      const ult = c.emitted('actualizar')![c.emitted('actualizar')!.length - 1][0]
      expect(ult).toBe('a\nb\nc\n')
-   })
+    })
+
+   // Regresión: Tab no debe EXTENDER la selección hasta el final del archivo.
+   // Se elige un bloque en el MEDIO de un documento; tras indentar, la selección
+   // debe conservar su contenido y quedarse dentro de la zona, no correr al EOF.
+  it('Tab mantiene la selección (no la extiende hasta el final del archivo)', async () => {
+    const texto = 'una\n  dos\n  tres\n  cuatro\n  cinco\n'
+    const c = mount(EditorCodesmio, { props: { valor: texto } })
+    const ta = c.find('textarea')
+    const el = ta.element as HTMLTextAreaElement
+        // Selecciona las líneas 'dos' y 'tres' (no las finales).
+    el.selectionStart = 5
+    el.selectionEnd = 12
+    await ta.trigger('keydown', { key: 'Tab' })
+       // La nueva selección sigue siendo un rango reducido, NO hasta el final.
+    expect(el.selectionEnd).toBeLessThanOrEqual(18)
+     expect(el.selectionEnd).toBeLessThan(texto.length)
+       // El contenido de la selección no cambia (se sangraron 2 líneas de 2 espacios).
+    expect(el.value.length).toBe(texto.length + 4)
+       })
+
+   it('Shift+Tab mantiene la selección (no la extiende hasta el final)', async () => {
+    const texto = 'una\n  dos\n  tres\n  cuatro\n'
+    const c = mount(EditorCodesmio, { props: { valor: texto } })
+    const ta = c.find('textarea')
+    const el = ta.element as HTMLTextAreaElement
+     el.selectionStart = 5
+     el.selectionEnd = 10
+    await ta.trigger('keydown', { key: 'Tab', shiftKey: true })
+       expect(el.selectionEnd).toBeLessThanOrEqual(10)
+     expect(el.selectionEnd).toBeLessThan(texto.length + 5)
+       })
 })

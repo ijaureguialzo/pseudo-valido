@@ -80,31 +80,45 @@ function rangoBloque(
 
 function indentarBloque(ta: HTMLTextAreaElement): void {
    const v = ta.value
-   const { inicio, fin, cursor } = rangoBloque(v, ta.selectionStart, ta.selectionEnd)
-    // Cada línea del bloque (incluida la vacía final del 'split') gana 2 espacios.
-   const nuevoBloque = v
-      .slice(inicio, fin)
-      .split('\n')
-      .map((l) => INDENT + l)
-      .join('\n')
+   // Capturamos la selección ANTES de tocar el valor: una vez asignado
+   // 'ta.value', algunos navegadores reajustan/colapsan la selección al final,
+   // y releer 'ta.selectionEnd' arrastraría el final hasta el fin del archivo.
+   const s0 = ta.selectionStart
+   const e0 = ta.selectionEnd
+   const { inicio, fin, cursor } = rangoBloque(v, s0, e0)
+     // Cada línea del bloque (incluida la vacía final del 'split') gana 2 espacios.
+   const lineas = v.slice(inicio, fin).split('\n')
+   const total = 2 * lineas.length // nº total de espacios añadidos en el bloque
+   const nuevoBloque = lineas.map((l) => INDENT + l).join('\n')
    const nueva = v.slice(0, inicio) + nuevoBloque + v.slice(fin)
    ta.value = nueva
-    // Se conserva el ancho de la selección (+2 espacios a cada línea del bloque,
-   // incluidos los que rodean los saltos de línea).
-   const nAunados = nuevoBloque.length - (fin - inicio)
-   if (cursor) {
-     ta.selectionStart = ta.selectionEnd = ta.selectionStart + INDENT.length
-        } else {
-      ta.selectionStart = inicio + INDENT.length
-      ta.selectionEnd = ta.selectionEnd + nAunados // desplaza el final
-            }
+     // La nueva posición de un carácter p se desplaza por los 2 espacios que se
+    // añadieron a cada línea del bloque que le precede. Se calcula a partir de la
+    // posición ORIGINAL (s0/e0), no de la selección del DOM tras la reasignación.
+   const shift = (p: number): number => {
+     if (p <= inicio) return p
+     if (p >= fin) return p + total
+     let ne = 0
+     for (let i = inicio; i < p; i++) if (v[i] === '\n') ne++
+       return p + 2 + 2 * ne
+        }
+   const ns = shift(s0)
+      // Con cursor (selección nula) el final coincide con el inicio; en caso
+     // contrario cada extremo se desplaza sobre su propia línea.
+    const ne = cursor ? ns : shift(e0)
+   ta.selectionStart = Math.min(ns, nueva.length)
+   ta.selectionEnd = Math.min(ne, nueva.length)
    emit('actualizar', nueva)
 }
 
 function dedentarBloque(ta: HTMLTextAreaElement): void {
    const v = ta.value
-   const { inicio, fin, cursor } = rangoBloque(v, ta.selectionStart, ta.selectionEnd)
-     // Por línea: se retira un tab o, si no hay, hasta 2 espacios de cabecera.
+    // Se captura la selección antes de reasignar 'ta.value' por la misma razón
+    // que en 'indentarBloque': el DOM puede colapsarla.
+   const s0 = ta.selectionStart
+   const e0 = ta.selectionEnd
+   const { inicio, fin, cursor } = rangoBloque(v, s0, e0)
+      // Por línea: se retira un tab o, si no hay, hasta 2 espacios de cabecera.
     const retiros: number[] = []
    const nuevoBloque = v.slice(inicio, fin).split('\n').map((l) => {
       let rem = 0
@@ -112,26 +126,21 @@ function dedentarBloque(ta: HTMLTextAreaElement): void {
       else {
         const m = l.match(/^ {1,2}/)
         if (m) rem = m[0].length
-           }
+            }
       retiros.push(rem)
       return l.slice(rem)
-          })
-    const nueva = v.slice(0, inicio) + nuevoBloque.join('\n') + v.slice(fin)
+             })
+   const totalRetirado = retiros.reduce((a, b) => a + b, 0)
+   const nueva = v.slice(0, inicio) + nuevoBloque.join('\n') + v.slice(fin)
    ta.value = nueva
-     // El cursor/la selección se desplaza a la izquierda según lo retirado en la
-    // primera y la última línea del bloque.
-    const totalRetirado = retiros.reduce((a, b) => a + b, 0)
-    if (cursor) {
-      ta.selectionStart = ta.selectionEnd =
-            Math.max(inicio, ta.selectionStart - (retiros[0] ?? 0))
-        } else {
-       ta.selectionStart = inicio + (retiros[0] ?? 0)
-       ta.selectionEnd = ta.selectionEnd
-          // La selección abarcaba hasta 'fin'; tras acortar el bloque, el nuevo
-          // final es 'fin - totalRetirado' relativo, o el final de la última línea.
-          ta.selectionEnd = Math.max(inicio + (retiros[0] ?? 0),
-                  fin - totalRetirado)
-          }
+       // Extremos desplazados a la izquierda por lo retirado en su línea. Se
+      // calculan desde las posiciones originales (s0/e0) y de 'fin' original; el
+      // bloque se acortó en 'totalRetirado' caracteres, todos dentro de [inicio, fin).
+   const remInicio = retiros[0] ?? 0
+   const ns = Math.max(inicio + remInicio, s0 - remInicio)
+   const ne = cursor ? ns : Math.max(inicio + remInicio, fin - totalRetirado)
+   ta.selectionStart = Math.min(ns, nueva.length)
+   ta.selectionEnd = Math.min(ne, nueva.length)
    emit('actualizar', nueva)
 }
 
