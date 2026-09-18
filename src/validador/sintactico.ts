@@ -203,23 +203,23 @@ function parseSentencias(ctx: Ctx, stop?: (ctx: Ctx) => boolean): Sentencia[] {
    return sent
 }
 
-// ¿El 'Mientras' actual es la condición de SALIDA de un Repetir (y no un bucle
-// Mientras…Hacer del cuerpo)? Lo es si, buscando hacia adelante, aparece un
-// cierre o EOF ANTES que cualquier 'Hacer'.
+// ¿El 'Mientras' actual es la condición de SALIDA de un 'Repetir' o el inicio de
+// un bucle 'Mientras … Hacer' que vive EN el cuerpo del Repetir? Decidimos
+// parseando la condición para situar exactamente dónde acaba, y mirando el token
+// que le SIGNORE: si es 'Hacer' es el bucle interno; cualquier otro (cierre,
+// otra sentencia, EOF) es la salida del Repetir. Un escaneo lineal que buscara
+// el primer 'Hacer' se engañaría si el cuerpo tuviera un bucle anidado (p. ej.
+// 'Para i = 1 Mientras i < 10 Hacer') antes de que el Repetir cerrara.
 function esMientrasSalida(ctx: Ctx): boolean {
    if (curr(ctx).texto !== 'Mientras') return false
-   let p = ctx.pos + 1
-   const closes = new Set([
-      'FinAlgoritmo', 'FinMientras', 'FinPara', 'FinSi', 'FinSegun', 'FinFuncion', 'SiNo'
-   ])
-   while (p < ctx.toks.length) {
-     const tk = ctx.toks[p]
-     if (tk.tipo === 'EOF') return true
-     if (tk.texto === 'Hacer') return false
-     if (closes.has(tk.texto)) return true
-     p++
-     }
-   return true
+   const guardaPos = ctx.pos
+   const guardaErrores = ctx.errores.length
+   advance(ctx)   // consumir 'Mientras'
+   parseExpr(ctx) // la condición de salida
+   const esSalida = curr(ctx).texto !== 'Hacer'
+   ctx.pos = guardaPos             // no consumimos: es solo una prueba
+   ctx.errores.length = guardaErrores // descartamos ruidos de la prueba
+   return esSalida
 }
 
 function parseSentencia(ctx: Ctx): Sentencia | null {
