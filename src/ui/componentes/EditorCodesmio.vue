@@ -59,17 +59,89 @@ function sincronizarScroll(event: Event): void {
   if (gutter) gutter.scrollTop = ta.scrollTop
 }
 
-// Tab inserta 2 espacios (en vez de mover el foco fuera del editor).
+// Tab inserta 2 espacios (no mueve el foco). Con una selección de varias líneas,
+// Tab sangra el bloque entero y Shift+Tab lo desangra (recorta la sangría).
+const INDENT = '  '     // 2 espacios por nivel de anidamiento
+
+// Límites del bloque de líneas que la selección [s, e) recorre. La selección de
+// un textarea es un rango de caracteres; para sangrar "el bloque" se expande al
+// inicio y fin de las líneas que toca (incluida la del cursor cuando no hay
+// selección). 'cursor' es cierto si s === e (un solo cursor, sin selección).
+function rangoBloque(
+     v: string, s: number, e: number):
+      { inicio: number; fin: number; cursor: boolean } {
+   const inicio = s === 0 ? 0 : v.lastIndexOf('\n', s - 1) + 1
+    // El final se toma en la línea que contiene el extremo: si 'e' cae sobre un
+     // '\n' el bloque llega hasta ese salto; si no, hasta el final de la línea.
+    const fin = e === 0 ? 0
+       : (v[e - 1] === '\n' ? e : (v.indexOf('\n', e) === -1 ? v.length : v.indexOf('\n', e)))
+   return { inicio, fin, cursor: s === e }
+}
+
+function indentarBloque(ta: HTMLTextAreaElement): void {
+   const v = ta.value
+   const { inicio, fin, cursor } = rangoBloque(v, ta.selectionStart, ta.selectionEnd)
+    // Cada línea del bloque (incluida la vacía final del 'split') gana 2 espacios.
+   const nuevoBloque = v
+      .slice(inicio, fin)
+      .split('\n')
+      .map((l) => INDENT + l)
+      .join('\n')
+   const nueva = v.slice(0, inicio) + nuevoBloque + v.slice(fin)
+   ta.value = nueva
+    // Se conserva el ancho de la selección (+2 espacios a cada línea del bloque,
+   // incluidos los que rodean los saltos de línea).
+   const nAunados = nuevoBloque.length - (fin - inicio)
+   if (cursor) {
+     ta.selectionStart = ta.selectionEnd = ta.selectionStart + INDENT.length
+        } else {
+      ta.selectionStart = inicio + INDENT.length
+      ta.selectionEnd = ta.selectionEnd + nAunados // desplaza el final
+            }
+   emit('actualizar', nueva)
+}
+
+function dedentarBloque(ta: HTMLTextAreaElement): void {
+   const v = ta.value
+   const { inicio, fin, cursor } = rangoBloque(v, ta.selectionStart, ta.selectionEnd)
+     // Por línea: se retira un tab o, si no hay, hasta 2 espacios de cabecera.
+    const retiros: number[] = []
+   const nuevoBloque = v.slice(inicio, fin).split('\n').map((l) => {
+      let rem = 0
+      if (l.startsWith('\t')) rem = 1
+      else {
+        const m = l.match(/^ {1,2}/)
+        if (m) rem = m[0].length
+           }
+      retiros.push(rem)
+      return l.slice(rem)
+          })
+    const nueva = v.slice(0, inicio) + nuevoBloque.join('\n') + v.slice(fin)
+   ta.value = nueva
+     // El cursor/la selección se desplaza a la izquierda según lo retirado en la
+    // primera y la última línea del bloque.
+    const totalRetirado = retiros.reduce((a, b) => a + b, 0)
+    if (cursor) {
+      ta.selectionStart = ta.selectionEnd =
+            Math.max(inicio, ta.selectionStart - (retiros[0] ?? 0))
+        } else {
+       ta.selectionStart = inicio + (retiros[0] ?? 0)
+       ta.selectionEnd = ta.selectionEnd
+          // La selección abarcaba hasta 'fin'; tras acortar el bloque, el nuevo
+          // final es 'fin - totalRetirado' relativo, o el final de la última línea.
+          ta.selectionEnd = Math.max(inicio + (retiros[0] ?? 0),
+                  fin - totalRetirado)
+          }
+   emit('actualizar', nueva)
+}
+
+// Tab indenta y Shift+Tab desindenta (bloque entero si hay selección).
 function manejarTeclas(event: KeyboardEvent): void {
   if (event.key !== 'Tab') return
   event.preventDefault()
   const ta = event.target as HTMLTextAreaElement
-  const inicio = ta.selectionStart
-  const fin = ta.selectionEnd
-  const nueva = ta.value.substring(0, inicio) + '  ' + ta.value.substring(fin)
-  ta.value = nueva
-  ta.selectionStart = ta.selectionEnd = inicio + 2
-  emit('actualizar', nueva)
+  if (event.shiftKey) dedentarBloque(ta)
+  else indentarBloque(ta)
 }
 </script>
 
