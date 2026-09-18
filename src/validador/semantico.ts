@@ -211,11 +211,16 @@ function analizarSentencia(
       break
         }
     case 'repetir': {
-      revisarExpr(s.condicion, fAlc, alc, errores, ya, funcionActual)
-      { const sub = nuevoAlcance(); copiar(fAlc, sub)
-        analizarCuerpo(s.cuerpo, alc, sub, errores, ya, funcionActual) }
+      // Un Repetir…Mientras es un bucle do-while: ejecuta el cuerpo ANTES de
+      // evaluar la condición de salida. Por eso una 'Leer num' dentro del cuerpo
+      // cuenta como inicialización para la condición 'Mientras num <= 0': se
+      // revisa la condición con el alcance RESULTANTE del cuerpo, no con el de
+      // entrada (si no, se marcaría M-003 erróneamente).
+      const cuerpo = nuevoAlcance(); copiar(fAlc, cuerpo)
+      analizarCuerpo(s.cuerpo, alc, cuerpo, errores, ya, funcionActual)
+      revisarExpr(s.condicion, cuerpo, alc, errores, ya, funcionActual)
       break
-        }
+       }
     case 'para': {
       const p = s
       fAlc.variables.set(p.variable, 'Entero')
